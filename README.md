@@ -1,2 +1,2 @@
 # transitive
-Transitive derive macros for Rust
+Transitive derive macros for Rust.
