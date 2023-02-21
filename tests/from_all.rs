@@ -17,7 +17,7 @@ impl_from!(C to B);
 impl_from!(D to C);
 
 #[test]
-fn from() {
+fn from_all() {
     A::from(D);
 
     // Compiles:

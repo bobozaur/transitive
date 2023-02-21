@@ -4,23 +4,26 @@
 
 mod common;
 
+use std::num::ParseIntError;
+
 use transitive::{TransitiveTryFrom, TransitiveFrom};
 
 #[derive(TransitiveTryFrom)]
-#[transitive(all(D, C, B))] // impl TryFrom<D> and TryFrom<C> for A
+#[transitive(u8, C, B)] // impl TryFrom<u8> for A
 struct A;
+
+#[derive(TransitiveTryFrom)]
+#[transitive(u8, C)] // impl TryFrom<D> for B
 struct B;
 struct C;
-struct D;
 
-struct ErrD_C;
 struct ErrC_B;
 #[derive(TransitiveFrom)]
-#[transitive(ErrD_C, ErrC_B)] // impl From<ErrD_C> for ErrB_A
+#[transitive(ParseIntError, ErrC_B)] // impl From<Err_u8_C> for ErrB_A
 struct ErrB_A;
 
-impl From<ErrD_C> for ErrC_B {
-    fn from(value: ErrD_C) -> Self {
+impl From<ParseIntError> for ErrC_B {
+    fn from(value: ParseIntError) -> Self {
         Self
     }
 }
@@ -33,12 +36,13 @@ impl From<ErrC_B> for ErrB_A {
 
 impl_try_from!(B to A err ErrB_A);
 impl_try_from!(C to B err ErrC_B);
-impl_try_from!(D to C err ErrD_C);
+impl_try_from!(u8 to C err ParseIntError);
 
 #[test]
-fn try_from_all() {
-    A::try_from(D);
+fn foreign_types() {
+    A::try_from(1);
+    B::try_from(1);
 
-    // Compiles:
-    A::try_from(C);
+    // should not compile:
+    // A::try_from(C);
 }
