@@ -22,7 +22,7 @@ use transitive::{transitive_from_process_attr, transitive_impl, transitive_try_f
 /// * `transitive_all` -> For A, B, C, D it derives `impl From<A> for D` *AND* `impl From<A> for C`
 ///
 /// ``` ignore
-/// use messages_macros::TransitiveFrom;
+/// use transitive::TransitiveFrom;
 ///
 /// #[derive(TransitiveFrom)]
 /// #[transitive(B, C, D, E, F, G)] // impl From<A> for G
@@ -114,7 +114,7 @@ pub fn transitive_from(input: TokenStream) -> TokenStream {
 /// * `transitive_all` -> For A, B, C, D it derives `impl TryFrom<D> for A` *AND* `impl TryFrom<C> for A`
 ///
 /// ``` ignore
-/// use messages_macros::TransitiveTryFrom;
+/// use transitive::TransitiveTryFrom;
 ///
 /// #[derive(TransitiveTryFrom)]
 /// #[transitive(B, C, D, E, F, G)] // impl TryFrom<G> for A
