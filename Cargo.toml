@@ -19,6 +19,3 @@ proc-macro = true
 proc-macro2 = "1.0.51"
 quote = "1.0.23"
 syn = "1.0.107"
-
-[dev-dependencies]
-derive_more = "0.99.17"
