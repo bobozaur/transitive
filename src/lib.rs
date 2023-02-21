@@ -1,4 +1,4 @@
-//! This crate provides derive macros that take care of boilerplate code to make 
+//! This crate provides derive macros that take care of boilerplate code to make
 //! transitive conversions in Rust using [`From`] and [`TryFrom`] traits.
 
 #![allow(clippy::expect_fun_call)]
@@ -7,8 +7,7 @@ mod transitive;
 
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, Error};
-use transitive::{transitive_from_process_attr, transitive_impl, transitive_try_from_process_attr};
-
+use transitive::{into_process_attr, transitive_impl, try_from_process_attr, from_process_attr, try_into_process_attr};
 
 /// Derive macro that implements [From] for A -> C by converting A -> B -> C.
 /// For this to work, [`From`] A to B and [`From`] B to C impls must exist.
@@ -22,15 +21,15 @@ use transitive::{transitive_from_process_attr, transitive_impl, transitive_try_f
 /// * `transitive_all` -> For A, B, C, D it derives `impl From<A> for D` *AND* `impl From<A> for C`
 ///
 /// ``` ignore
-/// use transitive::TransitiveFrom;
+/// use transitive::TransitiveInto;
 ///
-/// #[derive(TransitiveFrom)]
+/// #[derive(TransitiveInto)]
 /// #[transitive(B, C, D, E, F, G)] // impl From<A> for G
 /// struct A;
-/// #[derive(TransitiveFrom)]
+/// #[derive(TransitiveInto)]
 /// #[transitive_all(C, D, E, F, G)] // impl From<B> for D, E, F and G
 /// struct B;
-/// #[derive(TransitiveFrom)]
+/// #[derive(TransitiveInto)]
 /// #[transitive(C, D, E, F)] // impl From<C> for F
 /// #[transitive(F, G)] // impl From<C> for G => Since we already implement C -> F above, this works!
 /// struct C;
@@ -85,25 +84,41 @@ use transitive::{transitive_from_process_attr, transitive_impl, transitive_try_f
 /// F::from(C);
 /// G::from(C);
 /// ```
-#[proc_macro_derive(TransitiveFrom, attributes(transitive, transitive_all))]
+#[proc_macro_derive(TransitiveInto, attributes(transitive))]
+pub fn transitive_into(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    transitive_impl(input, into_process_attr)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
+}
+
+#[proc_macro_derive(TransitiveFrom, attributes(transitive))]
 pub fn transitive_from(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    transitive_impl(input, transitive_from_process_attr)
+    transitive_impl(input, from_process_attr)
+        .unwrap_or_else(Error::into_compile_error)
+        .into()
+}
+
+#[proc_macro_derive(TransitiveTryInto, attributes(transitive))]
+pub fn transitive_try_into(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    transitive_impl(input, try_into_process_attr)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }
 
 /// **NOTE**: This macro uses the argument types provided in the attributes
 /// in **reverse order**.
-/// 
+///
 ///  Derive macro that implements [TryFrom] for C -> A by converting C -> B -> A.
 ///
-/// This works similarly as the [`TransitiveFrom`] derive macro, but for the purpose
+/// This works similarly as the [`TransitiveInto`] derive macro, but for the purpose
 /// of reusing the same attributes and type lists, it parses them *in reverse*.
-/// 
+///
 /// So if you can do From: A -> B -> C you can do TryFrom: C -> B -> A.
 ///
-/// Just like with [`TransitiveFrom`], [`TryFrom`] B to A and [`TryFrom`] C to B impls must exist.
+/// Just like with [`TransitiveInto`], [`TryFrom`] B to A and [`TryFrom`] C to B impls must exist.
 /// The attribute is where the list of types to transit through is provided, in *reverse* order.
 ///
 /// Multiple attributes can be used on a single type for multiple transitive [`TryFrom`] impls
@@ -189,10 +204,10 @@ pub fn transitive_from(input: TokenStream) -> TokenStream {
 /// C::try_from(F);
 /// C::try_from(G);
 /// ```
-#[proc_macro_derive(TransitiveTryFrom, attributes(transitive, transitive_all))]
+#[proc_macro_derive(TransitiveTryFrom, attributes(transitive))]
 pub fn transitive_try_from(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    transitive_impl(input, transitive_try_from_process_attr)
+    transitive_impl(input, try_from_process_attr)
         .unwrap_or_else(Error::into_compile_error)
         .into()
 }

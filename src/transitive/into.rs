@@ -2,16 +2,20 @@
 
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use syn::{Attribute, Path, Result as SynResult};
+use syn::{parse::Parse, Attribute, Path, Result as SynResult};
 
-use super::{validate_attr_args, MinimalAttrArgs, TRANSITIVE, TRANSITIVE_ALL};
+use super::{validate_arg_list, ArgList, ArgsListType, MinimalAttrArgs, TRANSITIVE};
 
 /// Processes an attribute based on its kind
-pub fn transitive_from_process_attr(name: &Ident, attr: Attribute) -> Option<SynResult<TokenStream>> {
+pub fn into_process_attr(name: &Ident, attr: Attribute) -> Option<SynResult<TokenStream>> {
     if attr.path.is_ident(TRANSITIVE) {
-        Some(process_transitive_attr(name, attr))
-    } else if attr.path.is_ident(TRANSITIVE_ALL) {
-        Some(process_transitive_all_attr(name, attr))
+        let result = match attr.parse_args_with(ArgsListType::parse) {
+            Ok(ArgsListType::Simple(s)) => process_transitive_attr(name, s),
+            Ok(ArgsListType::All(s)) => process_transitive_all_attr(name, s),
+            Err(e) => Err(e),
+        };
+
+        Some(result)
     } else {
         None
     }
@@ -19,8 +23,12 @@ pub fn transitive_from_process_attr(name: &Ident, attr: Attribute) -> Option<Syn
 
 /// Parses attribute's parameters and returns a [`TokenStream`]
 /// containing a single [`From`] impl, from `name` to the last argument of the attribute.
-fn process_transitive_attr(name: &Ident, attr: Attribute) -> SynResult<TokenStream> {
-    let MinimalAttrArgs { first, mut last, iter } = validate_attr_args(attr)?;
+fn process_transitive_attr(name: &Ident, arg_list: ArgList) -> SynResult<TokenStream> {
+    let MinimalAttrArgs {
+        first,
+        mut last,
+        iter,
+    } = validate_arg_list(arg_list)?;
 
     // Create the buffer and store the minimum amount of statements.
     let mut stmts = TokenStream::new();
@@ -48,12 +56,12 @@ fn process_transitive_attr(name: &Ident, attr: Attribute) -> SynResult<TokenStre
 
 /// Parses the attribute's arguments and returns a [`TokenStream`]
 /// containing [`From`] impls between the derived type and each two successive given arguments.
-fn process_transitive_all_attr(name: &Ident, attr: Attribute) -> SynResult<TokenStream> {
+fn process_transitive_all_attr(name: &Ident, arg_list: ArgList) -> SynResult<TokenStream> {
     let MinimalAttrArgs {
         mut first,
         mut last,
         iter,
-    } = validate_attr_args(attr)?;
+    } = validate_arg_list(arg_list)?;
 
     // Create the buffer and store the first impl.
     let mut impls = TokenStream::new();
