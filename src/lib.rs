@@ -32,7 +32,7 @@
 //!
 //! Assume you have types `A`, `B`, `C` and `D`:
 //!
-//! ``` ignore
+//! ```
 //! use transitive::TransitiveInto;
 //!
 //! #[derive(TransitiveInto)]
@@ -45,9 +45,23 @@
 //! struct C;
 //! struct D;
 //!
-//! impl From<A> for B {...};
-//! impl From<B> for C {...};
-//! impl From<C> for D {...};
+//! impl From<A> for B {
+//!     fn from(val: A) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<B> for C {
+//!     fn from(val: B) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<C> for D {
+//!     fn from(val: C) -> Self {
+//!         Self
+//!     }
+//! };
 //!
 //! #[test]
 //! fn into() {
@@ -58,7 +72,7 @@
 //!
 //! The derives support multiple `transitive` attribute instances, each providing a list of types as a path:
 //!
-//! ``` ignore
+//! ```
 //! use transitive::TransitiveInto;
 //!
 //! #[derive(TransitiveInto)]
@@ -69,9 +83,23 @@
 //! struct C;
 //! struct D;
 //!
-//! impl From<A> for B {...};
-//! impl From<B> for C {...};
-//! impl From<C> for D {...};
+//! impl From<A> for B {
+//!     fn from(val: A) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<B> for C {
+//!     fn from(val: B) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<C> for D {
+//!     fn from(val: C) -> Self {
+//!         Self
+//!     }
+//! };
 //!
 //! #[test]
 //! fn into() {
@@ -83,7 +111,7 @@
 //! to which will cause every type after the first to be considered a target type, hence
 //! generating an impl:
 //!
-//! ``` ignore
+//! ```
 //! use transitive::TransitiveInto;
 //!
 //! #[derive(TransitiveInto)]
@@ -95,11 +123,35 @@
 //! struct E;
 //! struct F;
 //!
-//! impl From<A> for B {...};
-//! impl From<B> for C {...};
-//! impl From<C> for D {...};
-//! impl From<D> for E {...};
-//! impl From<E> for F {...};
+//! impl From<A> for B {
+//!     fn from(val: A) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<B> for C {
+//!     fn from(val: B) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<C> for D {
+//!     fn from(val: C) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<D> for E {
+//!     fn from(val: D) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<E> for F {
+//!     fn from(val: E) -> Self {
+//!         Self
+//!     }
+//! };
 //!
 //! #[test]
 //! fn into() {
@@ -131,16 +183,46 @@
 //!
 //! struct ErrD_C;
 //! struct ErrC_B;
+//! 
 //! #[derive(TransitiveFrom)]
 //! #[transitive(ErrD_C, ErrC_B)] // impl From<ErrD_C> for ErrB_A
 //! struct ErrB_A;
 //!
-//! impl From<ErrD_C> for ErrC_B {}
-//! impl From<ErrC_B> for ErrB_A {}
+//! impl From<ErrD_C> for ErrC_B {
+//!     fn from(val: ErrD_C) -> Self {
+//!         Self
+//!     }
+//! };
+//! 
+//! impl From<ErrC_B> for ErrB_A {
+//!     fn from(val: ErrC_B) -> Self {
+//!         Self
+//!     }
+//! };
 //!
-//! impl TryFrom<D> for C {type Error = ErrD_C; ...};
-//! impl TryFrom<C> for B {type Error = ErrC_B; ...};
-//! impl TryFrom<B> for A {type Error = ErrB_A; ...};
+//! impl TryFrom<D> for C {
+//!     type Error = ErrD_C;
+//! 
+//!     fn try_from(val: D) -> Result<Self, Self::Error> {
+//!         Ok(Self)    
+//!     }
+//! };
+//! 
+//! impl TryFrom<C> for B {
+//!     type Error = ErrC_B;
+//! 
+//!     fn try_from(val: C) -> Result<Self, Self::Error> {
+//!         Ok(Self)    
+//!     }
+//! };
+//! 
+//! impl TryFrom<B> for A {
+//!     type Error = ErrB_A;
+//! 
+//!     fn try_from(val: B) -> Result<Self, Self::Error> {
+//!         Ok(Self)    
+//!     }
+//! };
 //!
 //! #[test]
 //! fn try_from() {
@@ -156,7 +238,7 @@ mod transitive;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput, Error};
-use transitive::{from, into, transitive_impl, try_from, try_into};
+use crate::transitive::{from, into, transitive_impl, try_from, try_into};
 
 /// Derive macro that implements [From] for A -> C by converting A -> B -> C,
 /// where A is the derived type and C is the **last** type in the transition chain.
