@@ -27,7 +27,7 @@ pub fn transitive_impl<F, G>(
     impl_creator: &G,
 ) -> SynResult<TokenStream>
 where
-    F: Fn(TokenStream, &Ident, Path, Path) -> TokenStream,
+    F: Fn(TokenStream, &Ident, Path, Path, Option<Path>) -> TokenStream,
     G: Fn(&Ident, &Path, &Path) -> TokenStream,
 {
     let name = input.ident;
@@ -54,7 +54,7 @@ fn process_attr<F, G>(
     impl_creator: &G,
 ) -> Option<SynResult<TokenStream>>
 where
-    F: Fn(TokenStream, &Ident, Path, Path) -> TokenStream,
+    F: Fn(TokenStream, &Ident, Path, Path, Option<Path>) -> TokenStream,
     G: Fn(&Ident, &Path, &Path) -> TokenStream,
 {
     if attr.path.is_ident(TRANSITIVE) {
@@ -82,7 +82,7 @@ fn process_transitive<F>(
     raise_err: bool,
 ) -> SynResult<TokenStream>
 where
-    F: Fn(TokenStream, &Ident, Path, Path) -> TokenStream,
+    F: Fn(TokenStream, &Ident, Path, Path, Option<Path>) -> TokenStream,
 {
     let MinimalAttrArgs {
         first,
@@ -96,6 +96,8 @@ where
         TokenStream::new()
     };
 
+    let mut second_last = None;
+
     // Create the buffer and store the minimum amount of statements.
     let mut stmts = TokenStream::new();
     stmts.extend(quote! {let interm = #first::#conv_func(val)#raise;});
@@ -103,12 +105,13 @@ where
 
     // Store other statements, if any
     for param in iter {
+        second_last = Some(last);
         last = param?;
         stmts.extend(quote! {let interm = #last::#conv_func(interm)#raise;});
     }
 
     // Generate code
-    let expanded = ts_maker(stmts, name, first, last);
+    let expanded = ts_maker(stmts, name, first, last, second_last);
     Ok(expanded)
 }
 
