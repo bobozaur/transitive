@@ -6,7 +6,7 @@ macro_rules! impl_from {
                 $target
             }
         }
-    }
+    };
 }
 
 #[macro_export]
@@ -19,5 +19,5 @@ macro_rules! impl_try_from {
                 Ok($target)
             }
         }
-    }
+    };
 }

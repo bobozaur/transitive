@@ -50,13 +50,13 @@
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<B> for C {
 //!     fn from(val: B) -> Self {
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<C> for D {
 //!     fn from(val: C) -> Self {
 //!         Self
@@ -88,13 +88,13 @@
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<B> for C {
 //!     fn from(val: B) -> Self {
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<C> for D {
 //!     fn from(val: C) -> Self {
 //!         Self
@@ -128,25 +128,25 @@
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<B> for C {
 //!     fn from(val: B) -> Self {
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<C> for D {
 //!     fn from(val: C) -> Self {
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<D> for E {
 //!     fn from(val: D) -> Self {
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<E> for F {
 //!     fn from(val: E) -> Self {
 //!         Self
@@ -183,7 +183,7 @@
 //!
 //! struct ErrD_C;
 //! struct ErrC_B;
-//! 
+//!
 //! #[derive(TransitiveFrom)]
 //! #[transitive(ErrD_C, ErrC_B)] // impl From<ErrD_C> for ErrB_A
 //! struct ErrB_A;
@@ -193,7 +193,7 @@
 //!         Self
 //!     }
 //! };
-//! 
+//!
 //! impl From<ErrC_B> for ErrB_A {
 //!     fn from(val: ErrC_B) -> Self {
 //!         Self
@@ -202,23 +202,23 @@
 //!
 //! impl TryFrom<D> for C {
 //!     type Error = ErrD_C;
-//! 
+//!
 //!     fn try_from(val: D) -> Result<Self, Self::Error> {
 //!         Ok(Self)    
 //!     }
 //! };
-//! 
+//!
 //! impl TryFrom<C> for B {
 //!     type Error = ErrC_B;
-//! 
+//!
 //!     fn try_from(val: C) -> Result<Self, Self::Error> {
 //!         Ok(Self)    
 //!     }
 //! };
-//! 
+//!
 //! impl TryFrom<B> for A {
 //!     type Error = ErrB_A;
-//! 
+//!
 //!     fn try_from(val: B) -> Result<Self, Self::Error> {
 //!         Ok(Self)    
 //!     }
@@ -235,10 +235,10 @@
 
 mod transitive;
 
+use crate::transitive::{from, into, transitive_impl, try_from, try_into};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput, Error};
-use crate::transitive::{from, into, transitive_impl, try_from, try_into};
 
 /// Derive macro that implements [From] for A -> C by converting A -> B -> C,
 /// where A is the derived type and C is the **last** type in the transition chain.

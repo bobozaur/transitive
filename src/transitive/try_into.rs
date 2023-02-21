@@ -4,8 +4,13 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::Path;
 
-
-pub fn ts_maker(stmts: TokenStream, name: &Ident, first: Path, last: Path, second_last: Option<Path>) -> TokenStream {
+pub fn ts_maker(
+    stmts: TokenStream,
+    name: &Ident,
+    first: Path,
+    last: Path,
+    second_last: Option<Path>,
+) -> TokenStream {
     let second_last = second_last.as_ref().unwrap_or(&first);
 
     quote! {

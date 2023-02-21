@@ -4,7 +4,7 @@
 
 mod common;
 
-use transitive::{TransitiveTryFrom, TransitiveFrom};
+use transitive::{TransitiveFrom, TransitiveTryFrom};
 
 #[derive(TransitiveTryFrom)]
 #[transitive(all(D, C, B))] // impl TryFrom<D> and TryFrom<C> for A

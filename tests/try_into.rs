@@ -4,7 +4,7 @@
 
 mod common;
 
-use transitive::{TransitiveTryInto, TransitiveFrom};
+use transitive::{TransitiveFrom, TransitiveTryInto};
 
 #[derive(TransitiveTryInto)]
 #[transitive(B, C, D)] // impl TryFrom<A> for D

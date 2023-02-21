@@ -6,7 +6,7 @@ mod common;
 
 use std::num::ParseIntError;
 
-use transitive::{TransitiveTryFrom, TransitiveFrom};
+use transitive::{TransitiveFrom, TransitiveTryFrom};
 
 #[derive(TransitiveTryFrom)]
 #[transitive(u8, C, B)] // impl TryFrom<u8> for A
