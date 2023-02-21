@@ -19,12 +19,12 @@
 //! to the error type of the last conversion taking place.
 //! 
 //! # Conversions table:
-//! | Derived Type | Derive macro | Annotation              | Will impl           | Conditions                                                                                                              |
-//! |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-//! | A | [`TransientInto`]       | #[transitive(B, C, D)]  | `From<A> for D`     | `From<A> for B`, `From<B> for C`, `From<C> for D`                                                                       |
-//! | A | [`TransientFrom`]       | #[transitive(D, C, B)]  | `From<D> for A`     | `From<D> for C`, `From<C> for B`, `From<B> for A`                                                                       |
-//! | A | [`TransientTryInto`]    | #[transitive(B, C, D)]  | `TryFrom<A> for D`  | `TryFrom<A> for B`, `TryFrom<B> for C`, `TryFrom<C> for D`, errors must impl From<ErrType> for <D as TryFrom<C>>::Error |
-//! | A | [`TransientTryFrom`]    | #[transitive(D, C, B)]  | `TryFrom<D> for A`  | `TryFrom<D> for C`, `TryFrom<C>` for B, `TryFrom<B> for A, errors must impl From<ErrType> for <A as TryFrom<B>>::Error` |
+//! | Derived Type | Derive macro            | Annotation              | Will impl           | Conditions                                                                                                                |
+//! |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+//! | A            | [`TransientInto`]       | #[transitive(B, C, D)]  | `From<A> for D`     | `From<A> for B`, `From<B> for C`, `From<C> for D`                                                                         |
+//! | A            | [`TransientFrom`]       | #[transitive(D, C, B)]  | `From<D> for A`     | `From<D> for C`, `From<C> for B`, `From<B> for A`                                                                         |
+//! | A            | [`TransientTryInto`]    | #[transitive(B, C, D)]  | `TryFrom<A> for D`  | `TryFrom<A> for B`, `TryFrom<B> for C`, `TryFrom<C> for D`, errors must impl `From<ErrType> for <D as TryFrom<C>>::Error` |
+//! | A            | [`TransientTryFrom`]    | #[transitive(D, C, B)]  | `TryFrom<D> for A`  | `TryFrom<D> for C`, `TryFrom<C>` for B, `TryFrom<B> for A`, errors must `impl From<ErrType> for <A as TryFrom<B>>::Error` |
 //! 
 //! # Examples:
 //! 
@@ -78,7 +78,8 @@
 //! ```
 //! 
 //! To avoid a lot of attribte annotations, you can encapsulate the type list in `all()`
-//! to allow transitions between all the intermediary "pitstops":
+//! to which will cause every type after the first to be considered a target type, hence
+//! generating an impl:
 //! 
 //! ``` ignore
 //! use transitive::TransitiveInto;
@@ -107,8 +108,44 @@
 //! }
 //! ```
 //! 
-//! Let's see an example on how to use [`TransitiveTryFrom`]:
+//! Let's see an example on how to use [`TransitiveTryFrom`] which combines the "reversed" nature
+//! of the type list also used in [`TransitiveFrom`] and the error transitions also used in [`TransitiveTryInto`]:
 //! 
+//! ```
+//! use transitive::{TransitiveTryFrom, TransitiveFrom};
+//!
+//! // Note how the annotation now considers `A` as
+//! // target type and `D`, the first element in the type list,
+//! // as source.
+//! #[derive(TransitiveTryFrom)]
+//! #[transitive(D, C, B)] // impl TryFrom<D> for A
+//! struct A;
+//!
+//! #[derive(TransitiveTryFrom)]
+//! #[transitive(D, C)] // impl TryFrom<D> for B
+//! struct B;
+//! struct C;
+//! struct D;
+//! 
+//! struct ErrD_C;
+//! struct ErrC_B;
+//! #[derive(TransitiveFrom)]
+//! #[transitive(ErrD_C, ErrC_B)] // impl From<ErrD_C> for ErrB_A
+//! struct ErrB_A;
+//! 
+//! impl From<ErrD_C> for ErrC_B {}
+//! impl From<ErrC_B> for ErrB_A {}
+//!
+//! impl TryFrom<D> for C {type Error = ErrD_C; ...};
+//! impl TryFrom<C> for B {type Error = ErrC_B; ...};
+//! impl TryFrom<B> for A {type Error = ErrB_A; ...};
+//!
+//! #[test]
+//! fn try_from() {
+//!     A::try_from(D);
+//!     B::try_from(D);
+//! }
+//! ```
 
 #![allow(clippy::expect_fun_call)]
 
@@ -119,16 +156,11 @@ use quote::quote;
 use syn::{parse_macro_input, DeriveInput, Error};
 use transitive::{from, into, transitive_impl, try_from, try_into};
 
-/// Derive macro that implements [From] for A -> C by converting A -> B -> C.
+/// Derive macro that implements [From] for A -> C by converting A -> B -> C,
+/// where A is the derived type and C is the **last** type in the transition chain.
+/// 
 /// For this to work, [`From`] A to B and [`From`] B to C impls must exist.
-/// The attribute is where the list of types to transit through is provided, in order.
-///
-/// Multiple attributes can be used on a single type for multiple transitive [`From`] impls
-/// and the trasitions chain is virtually unlimited.
-///
-/// The macro supports two attributes, with slightly different behavior:
-/// * `transitive` -> For A, B, C, D it derives `impl From<A> for D`, skipping `impl From<A> for C`
-/// * `transitive_all` -> For A, B, C, D it derives `impl From<A> for D` *AND* `impl From<A> for C`
+/// The `transitive` attribute is where the list of types to transit through is provided, in order.
 
 #[proc_macro_derive(TransitiveInto, attributes(transitive))]
 pub fn transitive_into(input: TokenStream) -> TokenStream {
@@ -145,6 +177,11 @@ pub fn transitive_into(input: TokenStream) -> TokenStream {
     .into()
 }
 
+/// Derive macro that implements [From] for C -> A by converting C -> B -> A,
+/// where A is the derived type and C is the **first** type in the transition chain.
+/// 
+/// For this to work, [`From`] C to B and [`From`] B to A impls must exist.
+/// The `transitive` attribute is where the list of types to transit through is provided, in order.
 #[proc_macro_derive(TransitiveFrom, attributes(transitive))]
 pub fn transitive_from(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -160,6 +197,15 @@ pub fn transitive_from(input: TokenStream) -> TokenStream {
     .into()
 }
 
+
+/// Derive macro that implements [TryFrom] for A -> C by converting A -> B -> C,
+/// where A is the derived type and C is the **last** type in the transition chain.
+/// 
+/// For this to work, [`TryFrom`] A to B and [`TryFrom`] B to C impls must exist AND
+/// the error types that can be returned by the intermediary [`TryFrom`] impls must be
+/// convertible to `<C as TryFrom<B>>::Error`.
+/// 
+/// The `transitive` attribute is where the list of types to transit through is provided, in order.
 #[proc_macro_derive(TransitiveTryInto, attributes(transitive))]
 pub fn transitive_try_into(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -175,25 +221,14 @@ pub fn transitive_try_into(input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// **NOTE**: This macro uses the argument types provided in the attributes
-/// in **reverse order**.
-///
-///  Derive macro that implements [TryFrom] for C -> A by converting C -> B -> A.
-///
-/// This works similarly as the [`TransitiveInto`] derive macro, but for the purpose
-/// of reusing the same attributes and type lists, it parses them *in reverse*.
-///
-/// So if you can do From: A -> B -> C you can do TryFrom: C -> B -> A.
-///
-/// Just like with [`TransitiveInto`], [`TryFrom`] B to A and [`TryFrom`] C to B impls must exist.
-/// The attribute is where the list of types to transit through is provided, in *reverse* order.
-///
-/// Multiple attributes can be used on a single type for multiple transitive [`TryFrom`] impls
-/// and the trasitions chain is virtually unlimited.
-///
-/// The macro supports two attributes, with slightly different behavior:
-/// * `transitive` -> For A, B, C, D it derives `impl TryFrom<D> for A`, skipping `impl TryFrom<C> for A`
-/// * `transitive_all` -> For A, B, C, D it derives `impl TryFrom<D> for A` *AND* `impl TryFrom<C> for A`
+/// Derive macro that implements [TryFrom] for C -> A by converting C -> B -> A,
+/// where A is the derived type and C is the **first** type in the transition chain.
+/// 
+/// For this to work, [`TryFrom`] C to B and [`TryFrom`] B to A impls must exist AND
+/// the error types that can be returned by the intermediary [`TryFrom`] impls must be
+/// convertible to `<A as TryFrom<B>>::Error`.
+/// 
+/// The `transitive` attribute is where the list of types to transit through is provided, in order.
 #[proc_macro_derive(TransitiveTryFrom, attributes(transitive))]
 pub fn transitive_try_from(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

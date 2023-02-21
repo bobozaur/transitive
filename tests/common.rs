@@ -11,7 +11,7 @@ macro_rules! impl_from {
 
 #[macro_export]
 macro_rules! impl_try_from {
-    ($source:ident to $target:ident) => {
+    ($source:ident to $target:ident err $err:ident) => {
         impl TryFrom<$source> for $target {
             type Error = ();
 
