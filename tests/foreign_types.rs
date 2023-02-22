@@ -9,17 +9,17 @@ use std::num::ParseIntError;
 use transitive::{TransitiveFrom, TransitiveTryFrom};
 
 #[derive(TransitiveTryFrom)]
-#[transitive(u8, C, B)] // impl TryFrom<u8> for A
+#[transitive(from(u8, C, B))] // impl TryFrom<u8> for A
 struct A;
 
 #[derive(TransitiveTryFrom)]
-#[transitive(u8, C)] // impl TryFrom<D> for B
+#[transitive(from(u8, C))] // impl TryFrom<u8> for B
 struct B;
 struct C;
 
 struct ErrC_B;
 #[derive(TransitiveFrom)]
-#[transitive(ParseIntError, ErrC_B)] // impl From<Err_u8_C> for ErrB_A
+#[transitive(from(ParseIntError, ErrC_B))] // impl From<ParseIntError> for ErrB_A
 struct ErrB_A;
 
 impl From<ParseIntError> for ErrC_B {

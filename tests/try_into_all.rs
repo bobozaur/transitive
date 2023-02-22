@@ -4,10 +4,10 @@
 
 mod common;
 
-use transitive::{TransitiveFrom, TransitiveTryInto};
+use transitive::{TransitiveFrom, TransitiveTryFrom};
 
-#[derive(TransitiveTryInto)]
-#[transitive(all(B, C, D))] // impl TryFrom<A> for C and D
+#[derive(TransitiveTryFrom)]
+#[transitive(into(all(B, C, D)))] // impl TryFrom<A> for C and D
 struct A;
 struct B;
 struct C;
@@ -16,7 +16,7 @@ struct D;
 struct ErrA_B;
 struct ErrB_C;
 #[derive(TransitiveFrom)]
-#[transitive(ErrA_B, ErrB_C)] // impl From<ErrA_B> for ErrC_D
+#[transitive(from(ErrA_B, ErrB_C))] // impl From<ErrA_B> for ErrC_D
 struct ErrC_D;
 
 impl From<ErrA_B> for ErrB_C {
