@@ -12,7 +12,7 @@ pub struct MinimalAttrArgs {
 
 impl MinimalAttrArgs {
     /// Ensures we only accept types, not literals, integers or anything like that.
-    fn is_type_path(param: NestedMeta) -> SynResult<Path> {
+    fn try_into_path(param: NestedMeta) -> SynResult<Path> {
         match param {
             NestedMeta::Meta(Meta::Path(p)) => Ok(p),
             _ => Err(Error::new(param.span(), "only type paths accepted")),
@@ -31,7 +31,7 @@ impl TryFrom<RawArgList> for MinimalAttrArgs {
         let span = value.span();
 
         // Parse arguments and create an iterator of [`Path`] (types) items.
-        let mut iter = value.into_iter().map(Self::is_type_path as ArgMapFn);
+        let mut iter = value.into_iter().map(Self::try_into_path as ArgMapFn);
 
         // Ensure we were provided with at least two elements.
         let (first, last) = match (iter.next(), iter.next()) {
