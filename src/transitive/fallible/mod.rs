@@ -1,6 +1,6 @@
 use self::{try_from::TryFromHandler, try_into::TryIntoHandler};
 
-use super::direction_handler::DirectionHandler;
+use super::{direction_handler::{DirectionHandler, DirectionKind}, TRY_FROM, TRY_INTO};
 
 mod try_from;
 mod try_into;
@@ -12,11 +12,26 @@ impl DirectionHandler for FallibleTransition {
 
     type FromHandler = TryFromHandler;
 
-    fn make_into_handler(&self) -> Self::IntoHandler {
+    type Kind = FallibleDirection;
+
+    fn handler_into(&self) -> Self::IntoHandler {
         TryIntoHandler
     }
 
-    fn make_from_handler(&self) -> Self::FromHandler {
+    fn handler_from(&self) -> Self::FromHandler {
         TryFromHandler
     }
 }
+
+pub struct FallibleDirection;
+
+impl DirectionKind for FallibleDirection {
+    fn arg_from() -> &'static str {
+        TRY_FROM
+    }
+
+    fn arg_into() -> &'static str {
+        TRY_INTO
+    }
+}
+

@@ -7,11 +7,11 @@ mod common;
 use transitive::{TransitiveFrom, TransitiveTryFrom};
 
 #[derive(TransitiveTryFrom)]
-#[transitive(into(B, C, D))] // impl TryFrom<A> for D
+#[transitive(try_into(B, C, D))] // impl TryFrom<A> for D
 struct A;
 
 #[derive(TransitiveTryFrom)]
-#[transitive(into(C, D))] // impl TryFrom<B> for  D
+#[transitive(try_into(C, D))] // impl TryFrom<B> for  D
 struct B;
 struct C;
 struct D;

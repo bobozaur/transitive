@@ -7,7 +7,7 @@ mod common;
 use transitive::{TransitiveFrom, TransitiveTryFrom};
 
 #[derive(TransitiveTryFrom)]
-#[transitive(from(all(D, C, B)))] // impl TryFrom<D> and TryFrom<C> for A
+#[transitive(try_from(all(D, C, B)))] // impl TryFrom<D> and TryFrom<C> for A
 struct A;
 struct B;
 struct C;
