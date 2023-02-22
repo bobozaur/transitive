@@ -6,7 +6,7 @@ mod common;
 use transitive::TransitiveFrom;
 
 #[derive(TransitiveFrom)]
-#[transitive(all(D, C, B))] // impl From<D> and From<C> for A
+#[transitive(from(all(D, C, B)))] // impl From<D> and From<C> for A
 struct A;
 struct B;
 struct C;

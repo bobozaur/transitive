@@ -3,10 +3,10 @@
 
 mod common;
 
-use transitive::TransitiveInto;
+use transitive::TransitiveFrom;
 
-#[derive(TransitiveInto)]
-#[transitive(all(B, C, D))] // impl From<A> for C and D
+#[derive(TransitiveFrom)]
+#[transitive(into(all(B, C, D)))] // impl From<A> for C and D
 struct A;
 struct B;
 struct C;

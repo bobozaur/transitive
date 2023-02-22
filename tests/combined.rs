@@ -6,11 +6,8 @@ mod common;
 use transitive::TransitiveFrom;
 
 #[derive(TransitiveFrom)]
-#[transitive(from(D, C, B))] // impl From<D> for A
+#[transitive(from(all(D, C, B)), into(B, C, D))] // impl From<D> and From<C> for A
 struct A;
-
-#[derive(TransitiveFrom)]
-#[transitive(from(D, C))] // impl From<D> for A
 struct B;
 struct C;
 struct D;
@@ -19,11 +16,13 @@ impl_from!(B to A);
 impl_from!(C to B);
 impl_from!(D to C);
 
-#[test]
-fn from() {
-    A::from(D);
-    B::from(D);
+impl_from!(A to B);
+impl_from!(B to C);
+impl_from!(C to D);
 
-    // should not compile:
-    // A::from(C);
+#[test]
+fn from_all() {
+    A::from(D);
+    A::from(C);
+    D::from(A);
 }
