@@ -1,17 +1,53 @@
+use std::marker::PhantomData;
+
 use syn::{
     parse::{Parse, ParseStream},
     spanned::Spanned,
     Error, Meta, MetaList, NestedMeta, Result as SynResult,
 };
 
-use super::{arg_list_type::ArgListType, FROM, INTO};
+use super::{arg_list_type::ArgListType, direction_handler::DirectionKind};
 
 pub enum Direction {
     From(ArgListType),
     Into(ArgListType),
 }
 
-impl TryFrom<NestedMeta> for Direction {
+pub struct DirectionWrapper<K>
+where
+    K: DirectionKind,
+{
+    direction: Direction,
+    marker: PhantomData<fn() -> K>,
+}
+
+impl<K> DirectionWrapper<K>
+where
+    K: DirectionKind,
+{
+    pub fn into_inner(self) -> Direction {
+        self.direction
+    }
+
+    fn direction_from(args: ArgListType) -> Self {
+        Self {
+            direction: Direction::From(args),
+            marker: PhantomData,
+        }
+    }
+
+    fn direction_into(args: ArgListType) -> Self {
+        Self {
+            direction: Direction::Into(args),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl<K> TryFrom<NestedMeta> for DirectionWrapper<K>
+where
+    K: DirectionKind,
+{
     type Error = Error;
 
     fn try_from(value: NestedMeta) -> Result<Self, Self::Error> {
@@ -23,13 +59,16 @@ impl TryFrom<NestedMeta> for Direction {
     }
 }
 
-impl TryFrom<MetaList> for Direction {
+impl<K> TryFrom<MetaList> for DirectionWrapper<K>
+where
+    K: DirectionKind,
+{
     type Error = Error;
 
     fn try_from(value: MetaList) -> Result<Self, Self::Error> {
         match value.path.get_ident() {
-            Some(i) if i == FROM => Ok(Self::From(value.nested.try_into()?)),
-            Some(i) if i == INTO => Ok(Self::Into(value.nested.try_into()?)),
+            Some(i) if i == K::arg_from() => Ok(Self::direction_from(value.nested.try_into()?)),
+            Some(i) if i == K::arg_into() => Ok(Self::direction_into(value.nested.try_into()?)),
             Some(i) => Err(Error::new(i.span(), format!("unknown argument {i}"))),
             None => Err(Error::new(value.path.span(), "missing direction argument")),
         }
@@ -45,7 +84,10 @@ impl TryFrom<MetaList> for Direction {
 ///
 /// The type lists must have at least two arguments, otherwise
 /// there's no transition to do.
-impl Parse for Direction {
+impl<K> Parse for DirectionWrapper<K>
+where
+    K: DirectionKind,
+{
     fn parse(input: ParseStream) -> SynResult<Self> {
         let nested = NestedMeta::parse(input)?;
         nested.try_into()

@@ -15,15 +15,16 @@
 //! - `#[transitive(into(all(A, B, C)))]` treats every element apart from the first as a target type
 //!
 //! For [`TransitiveTryFrom`] the error types must be convertible to the error type of the last conversion taking place.
+//! Additionally, the attribute arguments become `try_from` and `try_into`.
 //!
 //! # Conversions table:
 //!
-//! | Derived Type | Derive macro             | Annotation                    | Will impl           | Conditions                                                                                                                |
-//! |--------------|--------------------------|-------------------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------|
-//! | A            | [`TransitiveFrom`]       | #[transitive(into(B, C, D))]  | `From<A> for D`     | `From<A> for B`; `From<B> for C`; `From<C> for D`                                                                         |
-//! | A            | [`TransitiveFrom`]       | #[transitive(from(D, C, B))]  | `From<D> for A`     | `From<D> for C`; `From<C> for B`; `From<B> for A`                                                                         |
-//! | A            | [`TransitiveTryFrom`]    | #[transitive(into(B, C, D))]  | `TryFrom<A> for D`  | `TryFrom<A> for B`; `TryFrom<B> for C`; `TryFrom<C> for D`; errors must impl `From<ErrType> for <D as TryFrom<C>>::Error` |
-//! | A            | [`TransitiveTryFrom`]    | #[transitive(from(D, C, B))]  | `TryFrom<D> for A`  | `TryFrom<D> for C`; `TryFrom<C>` for B; `TryFrom<B> for A`; errors must `impl From<ErrType> for <A as TryFrom<B>>::Error` |
+//! | Derived Type | Derive macro             | Annotation                        | Will impl           | Conditions                                                                                                                |
+//! |--------------|--------------------------|-----------------------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------|
+//! | A            | [`TransitiveFrom`]       | #[transitive(into(B, C, D))]      | `From<A> for D`     | `From<A> for B`; `From<B> for C`; `From<C> for D`                                                                         |
+//! | A            | [`TransitiveFrom`]       | #[transitive(from(D, C, B))]      | `From<D> for A`     | `From<D> for C`; `From<C> for B`; `From<B> for A`                                                                         |
+//! | A            | [`TransitiveTryFrom`]    | #[transitive(try_into(B, C, D))]  | `TryFrom<A> for D`  | `TryFrom<A> for B`; `TryFrom<B> for C`; `TryFrom<C> for D`; errors must impl `From<ErrType> for <D as TryFrom<C>>::Error` |
+//! | A            | [`TransitiveTryFrom`]    | #[transitive(try_from(D, C, B))]  | `TryFrom<D> for A`  | `TryFrom<D> for C`; `TryFrom<C>` for B; `TryFrom<B> for A`; errors must `impl From<ErrType> for <A as TryFrom<B>>::Error` |
 //!
 //!
 //! # Examples:
@@ -170,11 +171,11 @@
 //! // target type and `D`, the first element in the type list,
 //! // as source.
 //! #[derive(TransitiveTryFrom)]
-//! #[transitive(from(D, C, B))] // impl TryFrom<D> for A
+//! #[transitive(try_from(D, C, B))] // impl TryFrom<D> for A
 //! struct A;
 //!
 //! #[derive(TransitiveTryFrom)]
-//! #[transitive(from(D, C))] // impl TryFrom<D> for B
+//! #[transitive(try_from(D, C))] // impl TryFrom<D> for B
 //! struct B;
 //! struct C;
 //! struct D;

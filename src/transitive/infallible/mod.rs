@@ -1,6 +1,9 @@
 use self::{from::FromHandler, into::IntoHandler};
 
-use super::direction_handler::DirectionHandler;
+use super::{
+    direction_handler::{DirectionHandler, DirectionKind},
+    FROM, INTO,
+};
 
 mod from;
 mod into;
@@ -12,11 +15,25 @@ impl DirectionHandler for InfallibleTransition {
 
     type FromHandler = FromHandler;
 
-    fn make_into_handler(&self) -> Self::IntoHandler {
+    type Kind = InfallibleDirection;
+
+    fn handler_into(&self) -> Self::IntoHandler {
         IntoHandler
     }
 
-    fn make_from_handler(&self) -> Self::FromHandler {
+    fn handler_from(&self) -> Self::FromHandler {
         FromHandler
+    }
+}
+
+pub struct InfallibleDirection;
+
+impl DirectionKind for InfallibleDirection {
+    fn arg_from() -> &'static str {
+        FROM
+    }
+
+    fn arg_into() -> &'static str {
+        INTO
     }
 }

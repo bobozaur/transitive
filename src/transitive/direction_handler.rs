@@ -1,20 +1,27 @@
 use proc_macro2::TokenStream;
-use syn::{punctuated::Punctuated, Attribute, DeriveInput, Ident, Result as SynResult};
+use syn::Result as SynResult;
+use syn::{punctuated::Punctuated, Attribute, DeriveInput, Ident};
 
+use super::direction::DirectionWrapper;
 use super::{arg_handler::ArgHandler, direction::Direction, RawArgList, TRANSITIVE};
 
 pub trait DirectionHandler {
     type IntoHandler: ArgHandler;
     type FromHandler: ArgHandler;
+    type Kind: DirectionKind;
 
-    fn make_into_handler(&self) -> Self::IntoHandler;
+    fn handler_into(&self) -> Self::IntoHandler;
 
-    fn make_from_handler(&self) -> Self::FromHandler;
+    fn handler_from(&self) -> Self::FromHandler;
 
-    fn impl_with_direction(&self, name: &Ident, direction: Direction) -> SynResult<TokenStream> {
-        match direction {
-            Direction::Into(args) => self.make_into_handler().make_impl(name, args),
-            Direction::From(args) => self.make_from_handler().make_impl(name, args),
+    fn impl_with_direction(
+        &self,
+        name: &Ident,
+        direction: DirectionWrapper<Self::Kind>,
+    ) -> SynResult<TokenStream> {
+        match direction.into_inner() {
+            Direction::Into(args) => self.handler_into().make_impl(name, args),
+            Direction::From(args) => self.handler_from().make_impl(name, args),
         }
     }
 
@@ -39,7 +46,7 @@ pub trait DirectionHandler {
 
         for meta_iter in attr_iter {
             for nested_meta in meta_iter? {
-                let direction = Direction::try_from(nested_meta)?;
+                let direction = DirectionWrapper::<Self::Kind>::try_from(nested_meta)?;
                 let tokens = self.impl_with_direction(&name, direction)?;
                 expanded.extend(tokens);
             }
@@ -47,4 +54,10 @@ pub trait DirectionHandler {
 
         Ok(expanded)
     }
+}
+
+pub trait DirectionKind {
+    fn arg_from() -> &'static str;
+
+    fn arg_into() -> &'static str;
 }
