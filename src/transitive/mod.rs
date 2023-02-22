@@ -23,3 +23,9 @@ const FROM: &str = "from";
 const INTO: &str = "into";
 const TRY_INTO: &str = "try_into";
 const TRY_FROM: &str = "try_from";
+
+/// Attributes available for choosing a direction.
+/// Should be fine to use an array as the lookup is really small.
+/// If for some reason this grows, it would be a good idea to 
+/// replace it with a lazy HashSet or something.
+static VALID_ARGS: [&str; 4] = [FROM, INTO, TRY_FROM, TRY_INTO];

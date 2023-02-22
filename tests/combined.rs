@@ -3,10 +3,11 @@
 
 mod common;
 
-use transitive::TransitiveFrom;
+use transitive::{TransitiveFrom, TransitiveTryFrom};
 
-#[derive(TransitiveFrom)]
-#[transitive(from(all(D, C, B)), into(B, C, D))] // impl From<D> and From<C> for A
+#[derive(TransitiveFrom, TransitiveTryFrom)]
+#[transitive(from(all(D, C, B)))] // impl From<D> and From<C> for A
+#[transitive(try_into(B, C, D))] // impl TryFrom<A> for D
 struct A;
 struct B;
 struct C;
@@ -24,5 +25,5 @@ impl_from!(C to D);
 fn from_all() {
     A::from(D);
     A::from(C);
-    D::from(A);
+    D::try_from(A);
 }

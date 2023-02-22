@@ -18,10 +18,14 @@ pub trait DirectionHandler {
         &self,
         name: &Ident,
         direction: DirectionWrapper<Self::Kind>,
-    ) -> SynResult<TokenStream> {
-        match direction.into_inner() {
-            Direction::Into(args) => self.handler_into().make_impl(name, args),
-            Direction::From(args) => self.handler_from().make_impl(name, args),
+    ) -> SynResult<Option<TokenStream>> {
+        let Some(direction) = direction.into_inner() else {
+            return Ok(None)
+        };
+
+        match direction {
+            Direction::Into(args) => self.handler_into().make_impl(name, args).map(Some),
+            Direction::From(args) => self.handler_from().make_impl(name, args).map(Some),
         }
     }
 
@@ -48,7 +52,10 @@ pub trait DirectionHandler {
             for nested_meta in meta_iter? {
                 let direction = DirectionWrapper::<Self::Kind>::try_from(nested_meta)?;
                 let tokens = self.impl_with_direction(&name, direction)?;
-                expanded.extend(tokens);
+
+                if let Some(tokens) = tokens {
+                    expanded.extend(tokens)
+                };
             }
         }
 
