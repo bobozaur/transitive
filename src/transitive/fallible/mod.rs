@@ -1,6 +1,9 @@
 use self::{try_from::TryFromHandler, try_into::TryIntoHandler};
 
-use super::{direction_handler::{DirectionHandler, DirectionKind}, TRY_FROM, TRY_INTO};
+use super::{
+    direction_handler::{DirectionHandler, DirectionKind},
+    TRY_FROM, TRY_INTO,
+};
 
 mod try_from;
 mod try_into;
@@ -34,4 +37,3 @@ impl DirectionKind for FallibleDirection {
         TRY_INTO
     }
 }
-
