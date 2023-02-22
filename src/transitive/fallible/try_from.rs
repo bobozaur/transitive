@@ -24,7 +24,7 @@ impl ArgHandler for TryFromHandler {
         quote! {
             impl TryFrom<#first> for #name {
                 type Error = <#name as TryFrom<#last>>::Error;
-    
+
                 fn try_from(val: #first) -> Result<Self, Self::Error> {
                     #stmts
                     Ok(interm)
@@ -34,10 +34,10 @@ impl ArgHandler for TryFromHandler {
     }
 
     fn create_pair_impl(&self, name: &Ident, first: &Path, last: &Path) -> TokenStream {
-            quote! {
+        quote! {
             impl TryFrom<#first> for #name {
                 type Error = <#name as TryFrom<#last>>::Error;
-    
+
                 fn try_from(val: #first) -> Result<Self, Self::Error> {
                     let interm = #last::try_from(val)?;
                     #name::try_from(interm)
@@ -47,6 +47,6 @@ impl ArgHandler for TryFromHandler {
     }
 
     fn stmt_end(&self) -> TokenStream {
-        quote!{?}
+        quote! {?}
     }
 }

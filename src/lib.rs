@@ -13,7 +13,7 @@
 //! - `#[transitive(into(A, B, C))]` results in derived type -> A -> B -> C
 //! - `#[transitive(from(all(A, B, C)))]` treats every element apart from the last as a source type
 //! - `#[transitive(into(all(A, B, C)))]` treats every element apart from the first as a target type
-//! 
+//!
 //! For [`TransitiveTryFrom`] the error types must be convertible to the error type of the last conversion taking place.
 //!
 //! # Conversions table:
@@ -160,7 +160,7 @@
 //! }
 //! ```
 //!
-//! Let's see an example on how to use [`TransitiveTryFrom`] which combines the "reversed" 
+//! Let's see an example on how to use [`TransitiveTryFrom`] which combines the "reversed"
 //! nature of the `from` attribute modifier and the error transitions constraints:
 //!
 //! ```
@@ -233,12 +233,12 @@
 
 mod transitive;
 
-use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput, Error};
 use crate::transitive::{
     direction_handler::DirectionHandler, fallible::FallibleTransition,
     infallible::InfallibleTransition,
 };
+use proc_macro::TokenStream;
+use syn::{parse_macro_input, DeriveInput, Error};
 
 /// Derive macro that implements [From] for infallible transitions.
 #[proc_macro_derive(TransitiveFrom, attributes(transitive))]

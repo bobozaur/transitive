@@ -1,6 +1,6 @@
 use syn::{spanned::Spanned, Error, Meta, MetaList, NestedMeta, Result as SynResult};
 
-use super::{RawArgList, ALL, minimal_args::MinimalAttrArgs};
+use super::{minimal_args::MinimalAttrArgs, RawArgList, ALL};
 
 /// Enum diferentiating between the simple or enhance
 /// transitive behavior.
