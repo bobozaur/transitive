@@ -240,11 +240,7 @@ use crate::transitive::{
     infallible::InfallibleTransition,
 };
 
-/// Derive macro that implements [From] for C -> A by converting C -> B -> A,
-/// where A is the derived type and C is the **first** type in the transition chain.
-///
-/// For this to work, [`From`] C to B and [`From`] B to A impls must exist.
-/// The `transitive` attribute is where the list of types to transit through is provided, in order.
+/// Derive macro that implements [From] for infallible transitions.
 #[proc_macro_derive(TransitiveFrom, attributes(transitive))]
 pub fn transitive_from(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -255,14 +251,9 @@ pub fn transitive_from(input: TokenStream) -> TokenStream {
         .into()
 }
 
-/// Derive macro that implements [TryFrom] for C -> A by converting C -> B -> A,
-/// where A is the derived type and C is the **first** type in the transition chain.
-///
-/// For this to work, [`TryFrom`] C to B and [`TryFrom`] B to A impls must exist AND
-/// the error types that can be returned by the intermediary [`TryFrom`] impls must be
-/// convertible to `<A as TryFrom<B>>::Error`.
-///
-/// The `transitive` attribute is where the list of types to transit through is provided, in order.
+/// Derive macro that implements [TryFrom] for fallible transitions.
+/// The error types occurring through the transition must all be convertible
+/// (implement [`From`]) to the error type of the **last** transition in the path.
 #[proc_macro_derive(TransitiveTryFrom, attributes(transitive))]
 pub fn transitive_try_from(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

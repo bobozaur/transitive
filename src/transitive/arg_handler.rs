@@ -4,7 +4,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Ident, Path, Result as SynResult};
 
-use super::{ArgListType, MinimalAttrArgs};
+use super::{arg_list_type::ArgListType, minimal_args::MinimalAttrArgs};
 
 pub trait ArgHandler {
     fn conv_func_name(&self) -> &str;
@@ -33,11 +33,7 @@ pub trait ArgHandler {
 
     /// Processes an argument list considering regular behavior
     /// of implementing the trait only between source type and target type.
-    fn make_bulk_impl(
-        &self,
-        name: &Ident,
-        args: MinimalAttrArgs,
-    ) -> SynResult<TokenStream> {
+    fn make_bulk_impl(&self, name: &Ident, args: MinimalAttrArgs) -> SynResult<TokenStream> {
         let MinimalAttrArgs {
             first,
             mut last,
@@ -70,11 +66,7 @@ pub trait ArgHandler {
     /// of implementing the trait between all transitions from either
     /// one source and multiple targets or multiple targets and once source,
     /// depending on the trait.
-    fn make_pair_impls(
-        &self,
-        name: &Ident,
-        args: MinimalAttrArgs,
-    ) -> SynResult<TokenStream> {
+    fn make_pair_impls(&self, name: &Ident, args: MinimalAttrArgs) -> SynResult<TokenStream> {
         let MinimalAttrArgs {
             mut first,
             mut last,

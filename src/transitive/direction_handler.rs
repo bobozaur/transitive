@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use syn::{punctuated::Punctuated, Attribute, DeriveInput, Ident, Result as SynResult};
 
-use super::{arg_handler::ArgHandler, Direction, RawArgList, TRANSITIVE};
+use super::{arg_handler::ArgHandler, direction::Direction, RawArgList, TRANSITIVE};
 
 pub trait DirectionHandler {
     type IntoHandler: ArgHandler;
