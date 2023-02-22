@@ -1,4 +1,4 @@
 # transitive
 Transitive derive macros for Rust.
 
-Please see the [docs](https://docs.rs/transitive/0.1.0/transitive/) for more details.
+Please see the [docs](https://docs.rs/transitive/latest/transitive/) for more details.
