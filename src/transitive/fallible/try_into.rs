@@ -24,10 +24,10 @@ impl ArgHandler for TryIntoHandler {
         let second_last = second_last.as_ref().unwrap_or(&first);
 
         quote! {
-            impl TryFrom<#name> for #last {
+            impl core::convert::TryFrom<#name> for #last {
                 type Error = <#last as TryFrom<#second_last>>::Error;
 
-                fn try_from(val: #name) -> Result<Self, Self::Error> {
+                fn try_from(val: #name) -> core::result::Result<Self, Self::Error> {
                     #stmts
                     Ok(interm)
                 }
@@ -37,10 +37,10 @@ impl ArgHandler for TryIntoHandler {
 
     fn create_pair_impl(&self, name: &Ident, first: &Path, last: &Path) -> TokenStream {
         quote! {
-            impl TryFrom<#name> for #last {
+            impl core::convert::TryFrom<#name> for #last {
                 type Error = <#last as TryFrom<#first>>::Error;
 
-                fn try_from(val: #name) -> Result<Self, Self::Error> {
+                fn try_from(val: #name) -> core::result::Result<Self, Self::Error> {
                     let interm = #first::try_from(val)?;
                     #last::try_from(interm)
                 }

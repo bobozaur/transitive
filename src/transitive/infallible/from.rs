@@ -22,7 +22,7 @@ impl ArgHandler for FromHandler {
         _second_last: Option<Path>,
     ) -> TokenStream {
         quote! {
-            impl From<#first> for #name {
+            impl core::convert::From<#first> for #name {
                 fn from(val: #first) -> #name {
                     #stmts
                     interm
@@ -33,7 +33,7 @@ impl ArgHandler for FromHandler {
 
     fn create_pair_impl(&self, name: &Ident, first: &Path, last: &Path) -> TokenStream {
         quote! {
-            impl From<#first> for #name {
+            impl core::convert::From<#first> for #name {
                 fn from(val: #first) -> #name {
                     let interm = #last::from(val);
                     #name::from(interm)

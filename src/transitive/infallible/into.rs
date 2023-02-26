@@ -1,5 +1,4 @@
 #![allow(clippy::expect_fun_call)]
-
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::Path;
@@ -22,7 +21,7 @@ impl ArgHandler for IntoHandler {
         _second_last: Option<Path>,
     ) -> TokenStream {
         quote! {
-            impl From<#name> for #last {
+            impl core::convert::From<#name> for #last {
                 fn from(val: #name) -> #last {
                     #stmts
                     interm
@@ -33,7 +32,7 @@ impl ArgHandler for IntoHandler {
 
     fn create_pair_impl(&self, name: &Ident, first: &Path, last: &Path) -> TokenStream {
         quote! {
-            impl From<#name> for #last {
+            impl core::convert::From<#name> for #last {
                 fn from(val: #name) -> #last {
                     let interm = #first::from(val);
                     #last::from(interm)

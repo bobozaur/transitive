@@ -39,7 +39,7 @@
 //! struct A;
 //!
 //! #[derive(TransitiveFrom)]
-//! #[transitive(into(C, D))] // impl From<B> for  D by doing B -> C -> D
+//! #[transitive(into(C, D))] // impl From<B> for D by doing B -> C -> D
 //! struct B;
 //! struct C;
 //! struct D;
@@ -162,7 +162,7 @@
 //! ```
 //!
 //! Let's see an example on how to use [`TransitiveTryFrom`] which combines the "reversed"
-//! nature of the `from` attribute modifier and the error transitions constraints:
+//! nature of the `from` and `try_from` attribute modifiers and the error transitions constraints:
 //!
 //! ```
 //! use transitive::{TransitiveTryFrom, TransitiveFrom};
