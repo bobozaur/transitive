@@ -22,10 +22,10 @@ impl ArgHandler for TryFromHandler {
         _second_last: Option<Path>,
     ) -> TokenStream {
         quote! {
-            impl TryFrom<#first> for #name {
+            impl core::convert::TryFrom<#first> for #name {
                 type Error = <#name as TryFrom<#last>>::Error;
 
-                fn try_from(val: #first) -> Result<Self, Self::Error> {
+                fn try_from(val: #first) -> core::result::Result<Self, Self::Error> {
                     #stmts
                     Ok(interm)
                 }
@@ -35,10 +35,10 @@ impl ArgHandler for TryFromHandler {
 
     fn create_pair_impl(&self, name: &Ident, first: &Path, last: &Path) -> TokenStream {
         quote! {
-            impl TryFrom<#first> for #name {
+            impl core::convert::TryFrom<#first> for #name {
                 type Error = <#name as TryFrom<#last>>::Error;
 
-                fn try_from(val: #first) -> Result<Self, Self::Error> {
+                fn try_from(val: #first) -> core::result::Result<Self, Self::Error> {
                     let interm = #last::try_from(val)?;
                     #name::try_from(interm)
                 }
