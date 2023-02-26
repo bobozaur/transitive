@@ -39,7 +39,7 @@
 //! struct A;
 //!
 //! #[derive(TransitiveFrom)]
-//! #[transitive(into(C, D))] // impl From<B> for  D by doing B -> C -> D
+//! #[transitive(into(C, D))] // impl From<B> for D by doing B -> C -> D
 //! struct B;
 //! struct C;
 //! struct D;
