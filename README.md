@@ -4,7 +4,7 @@
 Transitive converions through derive macros for Rust.
 
 ## Rationale:
-Assuming you have types `A`, `B` and `C` with the following, already implemented, conversions:
+Assume you have types `A`, `B` and `C` with the following, already implemented, conversions:
 - `A -> B`
 - `B -> C`
 
@@ -13,7 +13,7 @@ Sometimes it might be desirable to have an `A -> C` implementation which could e
 That is precisely what this crate does. Through the `TransitiveFrom` and `TransitiveTryFrom` derive macros, it will implement `From` or `TryFrom` respectively
 for converting from/to the derived type and a target type, given a path of transitions to go through.
 
-```
+```rust
 use transitive::TransitiveFrom;
 
 #[derive(TransitiveFrom)]
