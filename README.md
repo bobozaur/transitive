@@ -51,7 +51,7 @@ fn into() {
 }
 ```
 
-More examples and explanations can be found in the [documentation](https://docs.rs/exasol/latest/transitive/).
+More examples and explanations can be found in the [documentation](https://docs.rs/transitive/latest/transitive/).
 
 ## License
 Licensed under MIT license (LICENSE-MIT or https://opensource.org/licenses/MIT).
