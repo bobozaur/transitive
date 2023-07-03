@@ -31,14 +31,14 @@
 //! # Custom error type:
 //!
 //! For `try_from` and `try_into` annotations, the macro attribute can accept an `error = "MyError"` argument,
-//! like so: `#[transitive(try_into(A, B, C), error = "MyError")]`. This overrides the default behavior and allows 
+//! like so: `#[transitive(try_into(A, B, C), error = "MyError")]`. This overrides the default behavior and allows
 //! specifying a custom error type, but all the error types resulting from conversions must be convertible to this type.
 //!
 //! # Examples:
 //!
 //! Assume you have types `A`, `B`, `C` and `D`:
 //!
-//! ```rust
+//! ```
 //! use transitive::Transitive;
 //!
 //! #[derive(Transitive)]
@@ -73,9 +73,43 @@
 //! D::from(B);
 //! ```
 //!
+//! Note that the macro does nothing for types in the middle:
+//!
+//! ```compile_fail
+//! use transitive::Transitive;
+//!
+//! #[derive(Transitive)]
+//! #[transitive(into(B, C, D))] // impl From<A> for D by doing A -> B -> C -> D
+//! struct A;
+//! struct B;
+//! struct C;
+//! struct D;
+//!
+//! impl From<A> for B {
+//!     fn from(val: A) -> Self {
+//!         Self
+//!     }
+//! };
+//!
+//! impl From<B> for C {
+//!     fn from(val: B) -> Self {
+//!         Self
+//!     }
+//! };
+//!
+//! impl From<C> for D {
+//!     fn from(val: C) -> Self {
+//!         Self
+//!     }
+//! };
+//!
+//! D::from(A); // works
+//! C::from(A); // does not compile
+//! ```
+//!
 //! The derive supports multiple `transitive` attribute instances, each providing a list of types as a path:
 //!
-//! ```rust
+//! ```
 //! use transitive::Transitive;
 //!
 //! #[derive(Transitive)]
@@ -107,24 +141,25 @@
 //! D::from(A);
 //! ```
 //!
-//! Let's see an example on how to use a [`Transitive`] derive which combines the "reversed"
+//! Let's see an example on how to use [`Transitive`] when combining the "reversed"
 //! nature of the `from` and `try_from` attribute modifiers and the error transitions constraints:
 //!
-//! ```rust
+//! ```
 //! use transitive::{Transitive};
 //!
-//! // Note how the annotation now considers `A` as
-//! // target type and `D`, the first element in the type list,
-//! // as source.
+//! // Note how the annotation now considers `A` as target type
+//! // and `D`, the first element in the type list, as source.
 //! #[derive(Transitive)]
 //! #[transitive(try_from(D, C, B))] // impl TryFrom<D> for A
 //! struct A;
 //!
 //! #[derive(Transitive)]
-//! #[transitive(try_from(D, C))] // impl TryFrom<D> for B
+//! #[transitive(try_from(D, C), error = "ConvErr")] // impl TryFrom<D> for B, with custom error
 //! struct B;
 //! struct C;
 //! struct D;
+//!
+//! struct ConvErr;
 //!
 //! struct ErrD_C;
 //! struct ErrC_B;
@@ -140,6 +175,18 @@
 //! };
 //!
 //! impl From<ErrC_B> for ErrB_A {
+//!     fn from(val: ErrC_B) -> Self {
+//!         Self
+//!     }
+//! };
+//!
+//! impl From<ErrD_C> for ConvErr {
+//!     fn from(val: ErrD_C) -> Self {
+//!         Self
+//!     }
+//! };
+//!
+//! impl From<ErrC_B> for ConvErr {
 //!     fn from(val: ErrC_B) -> Self {
 //!         Self
 //!     }
@@ -173,10 +220,6 @@
 //! B::try_from(D);
 //! ```
 
-#![allow(clippy::expect_fun_call)]
-
-mod fallible;
-mod infallible;
 mod transitive;
 
 use proc_macro::TokenStream;

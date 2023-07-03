@@ -4,7 +4,7 @@ use darling::{util::PathList, FromAttributes};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
-use crate::transitive::TransitiveIdent;
+use crate::transitive::attr::AttrWithIdent;
 
 #[derive(FromAttributes)]
 #[darling(attributes(transitive))]
@@ -12,7 +12,7 @@ pub struct TransitiveFrom {
     from: PathList,
 }
 
-impl ToTokens for TransitiveIdent<'_, &TransitiveFrom> {
+impl ToTokens for AttrWithIdent<'_, &TransitiveFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let first = self.data.from.first();

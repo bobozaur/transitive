@@ -3,7 +3,7 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::Path;
 
-use crate::transitive::TransitiveIdent;
+use crate::transitive::attr::AttrWithIdent;
 
 #[derive(FromAttributes)]
 #[darling(attributes(transitive))]
@@ -12,7 +12,7 @@ pub struct TransitiveTryInto {
     error: Option<Path>,
 }
 
-impl ToTokens for TransitiveIdent<'_, &TransitiveTryInto> {
+impl ToTokens for AttrWithIdent<'_, &TransitiveTryInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = &self.ident;
 
