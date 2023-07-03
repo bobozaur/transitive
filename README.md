@@ -58,4 +58,4 @@ Licensed under MIT license (LICENSE-MIT or https://opensource.org/licenses/MIT).
 
 ## Contributing
 Contributions to this repository, unless explicitly stated otherwise, will be considered licensed under MIT.
-Bugs/issues encountered can be opened [here](https://github.com/bobozaur/transitive/issues)
+Bugs/issues encountered can be opened [here](https://github.com/bobozaur/transitive/issues).
