@@ -1,9 +1,6 @@
-#![allow(unused_variables)]
-#![allow(unused_must_use)]
-
-mod common;
-
 use transitive::Transitive;
+
+use crate::impl_from;
 
 #[derive(Transitive)]
 #[transitive(into(B, C, D))] // impl From<A> for D
@@ -19,8 +16,7 @@ impl_from!(A to B);
 impl_from!(B to C);
 impl_from!(C to D);
 
-#[test]
-fn into() {
+pub fn into() {
     D::from(A);
     D::from(B);
 }

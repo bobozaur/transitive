@@ -1,9 +1,6 @@
-#![allow(unused_variables)]
-#![allow(unused_must_use)]
-
-mod common;
-
 use transitive::Transitive;
+
+use crate::impl_from;
 
 #[derive(Transitive)]
 #[transitive(from(D, C, B))] // impl From<D>for A
@@ -22,8 +19,7 @@ impl_from!(A to B);
 impl_from!(B to C);
 impl_from!(C to D);
 
-#[test]
-fn from_all() {
+pub fn combined_attributes() {
     A::from(D);
     A::from(C);
     D::try_from(A);

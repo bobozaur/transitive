@@ -1,12 +1,8 @@
-#![allow(unused_variables)]
-#![allow(unused_must_use)]
-#![allow(non_camel_case_types)]
-
-mod common;
-
 use std::num::ParseIntError;
 
 use transitive::Transitive;
+
+use crate::impl_try_from;
 
 #[derive(Transitive)]
 #[transitive(try_from(u8, C, B))] // impl TryFrom<u8> for A
@@ -38,8 +34,7 @@ impl_try_from!(B to A err ErrB_A);
 impl_try_from!(C to B err ErrC_B);
 impl_try_from!(u8 to C err ParseIntError);
 
-#[test]
-fn foreign_types() {
+pub fn foreign_types() {
     A::try_from(1);
     B::try_from(1);
 }
