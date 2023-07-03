@@ -4,13 +4,13 @@
 
 mod common;
 
-use transitive::{TransitiveFrom, TransitiveTryFrom};
+use transitive::{Transitive};
 
-#[derive(TransitiveTryFrom)]
+#[derive(Transitive)]
 #[transitive(try_from(D, C, B))] // impl TryFrom<D> for A
 struct A;
 
-#[derive(TransitiveTryFrom)]
+#[derive(Transitive)]
 #[transitive(try_from(D, C))] // impl TryFrom<D> for B
 struct B;
 struct C;
@@ -18,7 +18,7 @@ struct D;
 
 struct ErrD_C;
 struct ErrC_B;
-#[derive(TransitiveFrom)]
+#[derive(Transitive)]
 #[transitive(from(ErrD_C, ErrC_B))] // impl From<ErrD_C> for ErrB_A
 struct ErrB_A;
 

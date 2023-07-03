@@ -3,13 +3,13 @@
 
 mod common;
 
-use transitive::TransitiveFrom;
+use transitive::Transitive;
 
-#[derive(TransitiveFrom)]
+#[derive(Transitive)]
 #[transitive(from(D, C, B))] // impl From<D> for A
 struct A;
 
-#[derive(TransitiveFrom)]
+#[derive(Transitive)]
 #[transitive(from(D, C))] // impl From<D> for A
 struct B;
 struct C;

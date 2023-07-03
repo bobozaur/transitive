@@ -6,19 +6,19 @@ mod common;
 
 use std::num::ParseIntError;
 
-use transitive::{TransitiveFrom, TransitiveTryFrom};
+use transitive::Transitive;
 
-#[derive(TransitiveTryFrom)]
+#[derive(Transitive)]
 #[transitive(try_from(u8, C, B))] // impl TryFrom<u8> for A
 struct A;
 
-#[derive(TransitiveTryFrom)]
+#[derive(Transitive)]
 #[transitive(try_from(u8, C))] // impl TryFrom<u8> for B
 struct B;
 struct C;
 
 struct ErrC_B;
-#[derive(TransitiveFrom)]
+#[derive(Transitive)]
 #[transitive(from(ParseIntError, ErrC_B))] // impl From<ParseIntError> for ErrB_A
 struct ErrB_A;
 

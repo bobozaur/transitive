@@ -10,17 +10,17 @@ Assume you have types `A`, `B` and `C` with the following, already implemented, 
 
 Sometimes it might be desirable to have an `A -> C` implementation which could easily be represented as `A -> B -> C`.
 
-That is precisely what this crate does. Through the `TransitiveFrom` and `TransitiveTryFrom` derive macros, it will implement `From` or `TryFrom` respectively
+That is precisely what this crate does. Through the `Transitive` derive macro, it will implement `From` or `TryFrom` respectively
 for converting from/to the derived type and a target type, given a path of transitions to go through.
 
 ```rust
-use transitive::TransitiveFrom;
+use transitive::Transitive;
 
-#[derive(TransitiveFrom)]
+#[derive(Transitive)]
 #[transitive(into(B, C, D))] // impl From<A> for D by doing A -> B -> C -> D
 struct A;
 
-#[derive(TransitiveFrom)]
+#[derive(Transitive)]
 #[transitive(into(C, D))] // impl From<B> for D by doing B -> C -> D
 struct B;
 struct C;
