@@ -38,7 +38,7 @@
 //!
 //! Assume you have types `A`, `B`, `C` and `D`:
 //!
-//! ```
+//! ```rust
 //! use transitive::Transitive;
 //!
 //! #[derive(Transitive)]
@@ -69,16 +69,13 @@
 //!     }
 //! };
 //!
-//! #[test]
-//! fn into() {
-//!     D::from(A);
-//!     D::from(B);
-//! }
+//! D::from(A);
+//! D::from(B);
 //! ```
 //!
 //! The derive supports multiple `transitive` attribute instances, each providing a list of types as a path:
 //!
-//! ```
+//! ```rust
 //! use transitive::Transitive;
 //!
 //! #[derive(Transitive)]
@@ -107,16 +104,13 @@
 //!     }
 //! };
 //!
-//! #[test]
-//! fn into() {
-//!     D::from(A);
-//! }
+//! D::from(A);
 //! ```
 //!
 //! Let's see an example on how to use a [`Transitive`] derive which combines the "reversed"
 //! nature of the `from` and `try_from` attribute modifiers and the error transitions constraints:
 //!
-//! ```
+//! ```rust
 //! use transitive::{Transitive};
 //!
 //! // Note how the annotation now considers `A` as
@@ -175,11 +169,8 @@
 //!     }
 //! };
 //!
-//! #[test]
-//! fn try_from() {
-//!     A::try_from(D);
-//!     B::try_from(D);
-//! }
+//! A::try_from(D);
+//! B::try_from(D);
 //! ```
 
 #![allow(clippy::expect_fun_call)]
