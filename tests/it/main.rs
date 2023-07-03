@@ -3,10 +3,10 @@
 #![allow(non_camel_case_types)]
 
 mod combined;
-mod macros;
 mod foreign_types;
 mod from;
 mod into;
+mod macros;
 mod try_from;
 mod try_into;
 
