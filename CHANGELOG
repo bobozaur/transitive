@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Updated dependencies.
 - Refactored library using `darling`.
 - Merged the two `TransitiveFrom` and `TransitiveTryFrom` derive macros into a single `Transitive` macro (the behavior is now controlled through the attribute modifiers).
+- Dropped the `all` macro attribute modifier.
  
-## [0.4.2] - 2023-03-09
+## [0.4.3] - 2023-03-09
 
 First "feature complete" release.

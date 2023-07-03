@@ -42,7 +42,4 @@ impl_try_from!(u8 to C err ParseIntError);
 fn foreign_types() {
     A::try_from(1);
     B::try_from(1);
-
-    // should not compile:
-    // A::try_from(C);
 }

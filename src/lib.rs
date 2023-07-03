@@ -14,25 +14,25 @@
 //! - `#[transitive(try_from(A, B, C))]` results in the fallible version of: A -> B -> C -> X
 //! - `#[transitive(try_into(A, B, C))]` results in the fallible version of: X -> A -> B -> C
 //!
-//! For fallible conversions the error types must be convertible to the error type of the last conversion taking place.
+//! By default, for fallible conversions the error types must be convertible to the error type of the last conversion taking place.
 //! So, in a `#[transitive(try_from(A, B, C))]` annotation on type `X`, the last conversion taking place is `C -> X`.
 //! Let's call this `ErrC_X`. All error types resulting from the previous conversions must implement `From<Err> for ErrC_X`.
 //!
 //! # Conversions table:
 //!
-//! | Derived Type | Derive macro             | Annotation                        | Will impl           | Conditions                                                                                                                |
-//! |--------------|--------------------------|-----------------------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------|
-//! | A            | [`Transitive`]       | #[transitive(into(B, C, D))]      | `From<A> for D`     | `From<A> for B`; `From<B> for C`; `From<C> for D`                                                                         |
-//! | A            | [`Transitive`]       | #[transitive(from(D, C, B))]      | `From<D> for A`     | `From<D> for C`; `From<C> for B`; `From<B> for A`                                                                         |
-//! | A            | [`Transitive`]       | #[transitive(try_into(B, C, D))]  | `TryFrom<A> for D`  | `TryFrom<A> for B`; `TryFrom<B> for C`; `TryFrom<C> for D`; errors must impl `From<ErrType> for <D as TryFrom<C>>::Error` |
-//! | A            | [`Transitive`]       | #[transitive(try_from(D, C, B))]  | `TryFrom<D> for A`  | `TryFrom<D> for C`; `TryFrom<C>` for B; `TryFrom<B> for A`; errors must `impl From<ErrType> for <A as TryFrom<B>>::Error` |
+//! | Derived Type | Annotation                        | Will impl           | Conditions                                                                                                                |
+//! |--------------|-----------------------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------|
+//! | A            | #[transitive(into(B, C, D))]      | `From<A> for D`     | `From<A> for B`; `From<B> for C`; `From<C> for D`                                                                         |
+//! | A            | #[transitive(from(D, C, B))]      | `From<D> for A`     | `From<D> for C`; `From<C> for B`; `From<B> for A`                                                                         |
+//! | A            | #[transitive(try_into(B, C, D))]  | `TryFrom<A> for D`  | `TryFrom<A> for B`; `TryFrom<B> for C`; `TryFrom<C> for D`; errors must impl `From<ErrType> for <D as TryFrom<C>>::Error` |
+//! | A            | #[transitive(try_from(D, C, B))]  | `TryFrom<D> for A`  | `TryFrom<D> for C`; `TryFrom<C>` for B; `TryFrom<B> for A`; errors must `impl From<ErrType> for <A as TryFrom<B>>::Error` |
 //!
 //!
-//! # Custom error type
+//! # Custom error type:
 //!
-//! For `try_from` and `try_into` annotations, the macro attribute can accept an `error = "MyError"` argument, 
-//! like so: `#[transitive(try_into(A, B, C), error = "MyError")]`. This allows specifying a custom error type,
-//! but all the error types resulting from conversions must be convertible to this type.
+//! For `try_from` and `try_into` annotations, the macro attribute can accept an `error = "MyError"` argument,
+//! like so: `#[transitive(try_into(A, B, C), error = "MyError")]`. This overrides the default behavior and allows 
+//! specifying a custom error type, but all the error types resulting from conversions must be convertible to this type.
 //!
 //! # Examples:
 //!
@@ -76,7 +76,7 @@
 //! }
 //! ```
 //!
-//! The derives support multiple `transitive` attribute instances, each providing a list of types as a path:
+//! The derive supports multiple `transitive` attribute instances, each providing a list of types as a path:
 //!
 //! ```
 //! use transitive::Transitive;
@@ -113,7 +113,7 @@
 //! }
 //! ```
 //!
-//! Let's see an example on how to use [`Transitive`] which combines the "reversed"
+//! Let's see an example on how to use a [`Transitive`] derive which combines the "reversed"
 //! nature of the `from` and `try_from` attribute modifiers and the error transitions constraints:
 //!
 //! ```

@@ -23,7 +23,4 @@ impl_from!(C to D);
 fn into() {
     D::from(A);
     D::from(B);
-
-    // should not compile:
-    // C::from(A);
 }
