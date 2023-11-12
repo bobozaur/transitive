@@ -23,7 +23,8 @@ impl ToTokens for AttrWithIdent<'_, &TransitiveTryInto> {
             .data
             .try_into
             .iter()
-            .map(|ty| quote! {let val = #ty::try_from(val)?;});
+            .take(self.data.try_into.len() - 1)
+            .map(|ty| quote! {let val: #ty = core::convert::TryFrom::try_from(val)?;});
 
         let error = self
             .data
@@ -38,6 +39,7 @@ impl ToTokens for AttrWithIdent<'_, &TransitiveTryInto> {
 
                 fn try_from(val: #name) -> core::result::Result<Self, Self::Error> {
                     #(#stmts)*
+                    let val = core::convert::TryFrom::try_from(val)?;
                     Ok(val)
                 }
             }

@@ -26,8 +26,8 @@ impl ToTokens for AttrWithIdent<'_, &TransitiveTryFrom> {
             .try_from
             .iter()
             .skip(1)
-            .map(|ty| quote! {let val = #ty::try_from(val)?;})
-            .chain(once(quote! {let val = #name::try_from(val)?;}));
+            .map(|ty| quote! {let val: #ty = core::convert::TryFrom::try_from(val)?;})
+            .chain(once(quote! {let val = core::convert::TryFrom::try_from(val)?;}));
 
         let error = self
             .data

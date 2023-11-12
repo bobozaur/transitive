@@ -20,13 +20,14 @@ impl ToTokens for AttrWithIdent<'_, &TransitiveInto> {
             .data
             .into
             .iter()
-            .map(|ty| quote! {let val = #ty::from(val);});
+            .take(self.data.into.len() - 1)
+            .map(|ty| quote! {let val: #ty = core::convert::From::from(val);});
 
         let expanded = quote! {
             impl core::convert::From<#name> for #last {
                 fn from(val: #name) -> #last {
                     #(#stmts)*
-                    val
+                    core::convert::From::from(val)
                 }
             }
         };
