@@ -1,6 +1,6 @@
-use transitive::Transitive;
+mod macros;
 
-use crate::impl_from;
+use transitive::Transitive;
 
 #[derive(Transitive)]
 #[transitive(into(B, C, D))] // impl From<A> for D
@@ -16,7 +16,8 @@ impl_from!(A to B);
 impl_from!(B to C);
 impl_from!(C to D);
 
-pub fn into() {
-    D::from(A);
-    D::from(B);
+#[test]
+pub fn test_into() {
+    let _ = D::from(A);
+    let _ = D::from(B);
 }

@@ -1,8 +1,8 @@
+mod macros;
+
 use std::marker::PhantomData;
 
 use transitive::Transitive;
-
-use crate::impl_from;
 
 #[derive(Transitive)]
 #[transitive(from(D, C, B))] // impl From<D> for A
@@ -23,12 +23,13 @@ impl_from!(D to C);
 struct Z<T>(PhantomData<T>);
 
 impl<T> From<A> for Z<T> {
-    fn from(value: A) -> Self {
+    fn from(_value: A) -> Self {
         Self(PhantomData)
     }
 }
 
-pub fn from() {
-    A::from(D);
-    B::from(D);
+#[test]
+pub fn test_from() {
+    let _ = A::from(D);
+    let _ = B::from(D);
 }
