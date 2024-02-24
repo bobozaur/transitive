@@ -15,6 +15,7 @@ impl ToTokens for ParsedAttr<'_, &TransitiveInto> {
         let name = self.ident;
         let generic_parameters = self.generic_parameters();
         let simple_generic_parameters = self.simple_generic_parameters();
+        let where_clause = &self.generics.where_clause;
 
         let last = self.data.into.last();
 
@@ -26,7 +27,8 @@ impl ToTokens for ParsedAttr<'_, &TransitiveInto> {
             .map(|ty| quote! {let val: #ty = core::convert::From::from(val);});
 
         let expanded = quote! {
-            impl #generic_parameters core::convert::From<#name #simple_generic_parameters> for #last {
+            impl #generic_parameters core::convert::From<#name #simple_generic_parameters> for #last
+            #where_clause {
                 fn from(val: #name #simple_generic_parameters) -> #last {
                     #(#stmts)*
                     core::convert::From::from(val)
