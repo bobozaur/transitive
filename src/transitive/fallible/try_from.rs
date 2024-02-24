@@ -39,7 +39,7 @@ impl ToTokens for ParsedAttr<'_, &TransitiveTryFrom> {
             .error
             .as_ref()
             .map(|e| quote!(#e))
-            .unwrap_or_else(|| quote!(<#name as TryFrom<#last>>::Error));
+            .unwrap_or_else(|| quote!(<#name #simple_generic_parameters as TryFrom<#last>>::Error));
 
         let expanded = quote! {
             impl #generic_parameters core::convert::TryFrom<#first> for #name #simple_generic_parameters 

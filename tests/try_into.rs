@@ -18,7 +18,7 @@ mod try_into_simple {
     struct ErrAB;
     struct ErrBC;
     #[derive(Transitive)]
-    #[transitive(from(ErrAB, ErrBC))] // impl From<ErrA_B> for ErrC_D
+    #[transitive(from(ErrAB, ErrBC))] // impl From<ErrAB> for ErrCD
     struct ErrCD;
 
     impl From<ErrAB> for ErrBC {
