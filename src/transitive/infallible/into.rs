@@ -12,7 +12,8 @@ pub struct TransitiveInto {
 
 impl ToTokens for ParsedAttr<'_, &TransitiveInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let name = &self.ident;
+        let name = self.ident;
+        let generic_parameters = self.generic_parameters();
 
         let last = self.data.into.last();
 
@@ -24,8 +25,8 @@ impl ToTokens for ParsedAttr<'_, &TransitiveInto> {
             .map(|ty| quote! {let val: #ty = core::convert::From::from(val);});
 
         let expanded = quote! {
-            impl core::convert::From<#name> for #last {
-                fn from(val: #name) -> #last {
+            impl #generic_parameters core::convert::From<#name #generic_parameters> for #last {
+                fn from(val: #name #generic_parameters) -> #last {
                     #(#stmts)*
                     core::convert::From::from(val)
                 }

@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use syn::{Generics, Ident};
 
 use super::TransitiveAttr;
@@ -17,6 +17,17 @@ impl<'a, T> ParsedAttr<'a, T> {
             generics,
             data,
         }
+    }
+
+    pub fn generic_parameters(&self) -> TokenStream {
+        let Generics {
+            lt_token,
+            params,
+            gt_token,
+            ..
+        } = self.generics;
+
+        quote! {#lt_token #params #gt_token}
     }
 }
 

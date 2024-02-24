@@ -14,7 +14,8 @@ pub struct TransitiveTryInto {
 
 impl ToTokens for ParsedAttr<'_, &TransitiveTryInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let name = &self.ident;
+        let name = self.ident;
+        let generic_parameters = self.generic_parameters();
 
         let last = self.data.try_into.last();
         let second_last = self.data.try_into.iter().nth(self.data.try_into.len() - 2);
@@ -34,10 +35,10 @@ impl ToTokens for ParsedAttr<'_, &TransitiveTryInto> {
             .unwrap_or_else(|| quote!(<#last as TryFrom<#second_last>>::Error));
 
         let expanded = quote! {
-            impl core::convert::TryFrom<#name> for #last {
+            impl #generic_parameters core::convert::TryFrom<#name #generic_parameters> for #last {
                 type Error = #error;
 
-                fn try_from(val: #name) -> core::result::Result<Self, Self::Error> {
+                fn try_from(val: #name #generic_parameters) -> core::result::Result<Self, Self::Error> {
                     #(#stmts)*
                     let val = core::convert::TryFrom::try_from(val)?;
                     Ok(val)

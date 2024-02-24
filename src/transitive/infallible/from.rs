@@ -15,6 +15,8 @@ pub struct TransitiveFrom {
 impl ToTokens for ParsedAttr<'_, &TransitiveFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
+        let generic_parameters = self.generic_parameters();
+
         let first = self.data.from.first();
 
         let stmts = self
@@ -25,8 +27,8 @@ impl ToTokens for ParsedAttr<'_, &TransitiveFrom> {
             .chain(once(quote! {core::convert::From::from(val)}));
 
         let expanded = quote! {
-            impl core::convert::From<#first> for #name {
-                fn from(val: #first) -> #name {
+            impl #generic_parameters core::convert::From<#first> for #name #generic_parameters {
+                fn from(val: #first) -> Self {
                     #(#stmts)*
                 }
             }
