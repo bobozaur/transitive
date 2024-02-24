@@ -28,8 +28,42 @@ impl<T> From<A> for Z<T> {
     }
 }
 
+#[derive(Transitive)]
+#[transitive(from(D, C, B, A))] // impl From<D> for Y<'a>
+struct Y<'a>(PhantomData<&'a ()>);
+
+impl<'a> From<A> for Y<'a> {
+    fn from(_value: A) -> Self {
+        Self(PhantomData)
+    }
+}
+
+#[derive(Transitive)]
+#[transitive(from(D, C, B, A))] // impl From<D> for W<N>
+struct W<const N: usize>;
+
+impl<const N: usize> From<A> for W<N> {
+    fn from(_value: A) -> Self {
+        Self
+    }
+}
+
+#[derive(Transitive)]
+#[transitive(from(D, C, B, A))] // impl From<D> for Q<'a, 'b, N, T, U>
+struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b>(PhantomData<(&'a T, &'b U)>);
+
+impl<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b> From<A> for Q<'a, 'b, N, T, U> {
+    fn from(_value: A) -> Self {
+        Self(PhantomData)
+    }
+}
+
 #[test]
 pub fn test_from() {
     let _ = A::from(D);
     let _ = B::from(D);
+    let _ = Z::<()>::from(D);
+    let _ = Y::from(D);
+    let _ = W::<2>::from(D);
+    let _ = Q::<2, (), ()>::from(D);
 }

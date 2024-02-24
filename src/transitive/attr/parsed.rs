@@ -29,6 +29,32 @@ impl<'a, T> ParsedAttr<'a, T> {
 
         quote! {#lt_token #params #gt_token}
     }
+
+    pub fn simple_generic_parameters(&self) -> TokenStream {
+        let Generics {
+            lt_token,
+            params,
+            gt_token,
+            ..
+        } = self.generics;
+
+        let iter = params.iter().map(|v| match v {
+            syn::GenericParam::Lifetime(v) => {
+                let tt = &v.lifetime;
+                quote!(#tt)
+            }
+            syn::GenericParam::Type(v) => {
+                let tt = &v.ident;
+                quote!(#tt)
+            }
+            syn::GenericParam::Const(v) => {
+                let tt = &v.ident;
+                quote!(#tt)
+            }
+        });
+
+        quote! {#lt_token #(#iter),* #gt_token}
+    }
 }
 
 impl ToTokens for ParsedAttr<'_, TransitiveAttr> {

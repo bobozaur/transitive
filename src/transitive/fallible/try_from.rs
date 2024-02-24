@@ -18,6 +18,7 @@ impl ToTokens for ParsedAttr<'_, &TransitiveTryFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let generic_parameters = self.generic_parameters();
+        let simple_generic_parameters = self.simple_generic_parameters();
 
         let first = self.data.try_from.first();
         let last = self.data.try_from.last();
@@ -40,7 +41,7 @@ impl ToTokens for ParsedAttr<'_, &TransitiveTryFrom> {
             .unwrap_or_else(|| quote!(<#name as TryFrom<#last>>::Error));
 
         let expanded = quote! {
-            impl #generic_parameters core::convert::TryFrom<#first> for #name #generic_parameters {
+            impl #generic_parameters core::convert::TryFrom<#first> for #name #simple_generic_parameters {
                 type Error = #error;
 
                 fn try_from(val: #first) -> core::result::Result<Self, Self::Error> {
