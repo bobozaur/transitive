@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use darling::{util::PathList, FromAttributes};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
+use syn::{Generics, Path};
 
 use crate::transitive::attr::ParsedAttr;
 
@@ -8,13 +11,20 @@ use crate::transitive::attr::ParsedAttr;
 #[darling(attributes(transitive))]
 pub struct TransitiveInto {
     into: PathList,
+    with: Option<HashMap<Path, Path>>,
 }
 
 impl ToTokens for ParsedAttr<'_, &TransitiveInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
-        let generic_parameters = self.generic_parameters();
-        let simple_generic_parameters = self.simple_generic_parameters();
+        let Generics {
+            lt_token, gt_token, ..
+        } = self.generics;
+
+        let (generic_parameters, simple_generic_parameters) = match &self.data.with {
+            Some(with) => (quote!(), quote! {#lt_token #(#with),* #gt_token}),
+            None => (self.generic_parameters(), self.simple_generic_parameters()),
+        };
         let where_clause = &self.generics.where_clause;
 
         let last = self.data.into.last();

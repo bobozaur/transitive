@@ -1,9 +1,9 @@
-use std::iter::once;
+use std::{collections::HashMap, iter::once};
 
 use darling::{util::PathList, FromAttributes};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::Path;
+use syn::{Generics, Path};
 
 use crate::transitive::attr::ParsedAttr;
 
@@ -11,14 +11,24 @@ use crate::transitive::attr::ParsedAttr;
 #[darling(attributes(transitive))]
 pub struct TransitiveTryFrom {
     try_from: PathList,
+    with: Option<HashMap<Path, Path>>,
     error: Option<Path>,
 }
 
 impl ToTokens for ParsedAttr<'_, &TransitiveTryFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
-        let generic_parameters = self.generic_parameters();
-        let simple_generic_parameters = self.simple_generic_parameters();
+        let Generics {
+            lt_token, gt_token, ..
+        } = self.generics;
+
+        let (generic_parameters, simple_generic_parameters) = match &self.data.with {
+            Some(with) => (quote!(), {
+                let with = with.iter();
+                quote! {#lt_token #(#with),* #gt_token}
+            }),
+            None => (self.generic_parameters(), self.simple_generic_parameters()),
+        };
         let where_clause = &self.generics.where_clause;
 
         let first = self.data.try_from.first();
@@ -39,10 +49,10 @@ impl ToTokens for ParsedAttr<'_, &TransitiveTryFrom> {
             .error
             .as_ref()
             .map(|e| quote!(#e))
-            .unwrap_or_else(|| quote!(<#name #simple_generic_parameters as TryFrom<#last>>::Error));
+            .unwrap_or_else(|| quote!(<Self as TryFrom<#last>>::Error));
 
         let expanded = quote! {
-            impl #generic_parameters core::convert::TryFrom<#first> for #name #simple_generic_parameters 
+            impl #generic_parameters core::convert::TryFrom<#first> for #name #simple_generic_parameters
             #where_clause {
                 type Error = #error;
 

@@ -20,10 +20,17 @@ impl_from!(D to C);
 
 #[derive(Transitive)]
 #[transitive(from(D, C, B, A))] // impl From<D> for Z<T>
+#[transitive(from(C, B), with(usize))] // impl From<D> for Z<T>
 struct Z<T>(PhantomData<T>);
 
 impl<T> From<A> for Z<T> {
     fn from(_value: A) -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl From<B> for Z<usize> {
+    fn from(_value: B) -> Self {
         Self(PhantomData)
     }
 }

@@ -30,6 +30,14 @@ impl<'a, T> ParsedAttr<'a, T> {
         quote! {#lt_token #params #gt_token}
     }
 
+    /// Note:
+    /// Must ask for key value pairs in `with()`
+    /// and map them against the provided generics.
+    ///
+    /// Then replace the ones with the provided values while
+    /// preserving the ones without values.'
+    /// Should also replace them in their trait bounds.
+
     pub fn simple_generic_parameters(&self) -> TokenStream {
         let Generics {
             lt_token,
