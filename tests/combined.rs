@@ -1,6 +1,6 @@
-use transitive::Transitive;
+mod macros;
 
-use crate::impl_from;
+use transitive::Transitive;
 
 #[derive(Transitive)]
 #[transitive(from(D, C, B))] // impl From<D>for A
@@ -19,8 +19,9 @@ impl_from!(A to B);
 impl_from!(B to C);
 impl_from!(C to D);
 
-pub fn combined_attributes() {
-    A::from(D);
-    A::from(C);
-    D::try_from(A);
+#[test]
+pub fn test_combined_attributes() {
+    let _ = A::from(D);
+    let _ = A::from(C);
+    let _ = D::try_from(A);
 }

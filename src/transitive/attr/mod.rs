@@ -1,4 +1,4 @@
-mod idented;
+mod parsed;
 
 use darling::FromAttributes;
 use syn::Attribute;
@@ -8,7 +8,7 @@ use super::{
     infallible::{TransitiveFrom, TransitiveInto},
 };
 
-pub use idented::AttrWithIdent;
+pub use parsed::ParsedAttr;
 
 pub enum TransitiveAttr {
     From(TransitiveFrom),
