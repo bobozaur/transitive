@@ -7,20 +7,20 @@ use quote::{quote, ToTokens};
 use crate::transitive::attr::ParsedAttr;
 
 #[derive(FromAttributes)]
-#[darling(attributes(transitive))]
+#[darling(attributes(transitive_from))]
 pub struct TransitiveFrom {
-    from: PathList,
+    path: PathList,
 }
 
 impl ToTokens for ParsedAttr<'_, &TransitiveFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let first = self.data.from.first();
+        let first = self.data.path.first();
 
         let stmts = self
             .data
-            .from
+            .path
             .iter()
             .map(|ty| quote! {let val: #ty = core::convert::From::from(val);})
             .chain(once(quote! {core::convert::From::from(val)}));

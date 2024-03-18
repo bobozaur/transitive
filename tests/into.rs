@@ -5,11 +5,11 @@ use std::marker::PhantomData;
 use transitive::Transitive;
 
 #[derive(Transitive)]
-#[transitive(into(B, C, D))] // impl From<A> for D
+#[transitive_into(path(B, C, D))] // impl From<A> for D
 struct A;
 
 #[derive(Transitive)]
-#[transitive(into(C, D))] // impl From<B> for D
+#[transitive_into(path(C, D))] // impl From<B> for D
 struct B;
 struct C;
 struct D;
@@ -19,7 +19,7 @@ impl_from!(B to C);
 impl_from!(C to D);
 
 #[derive(Transitive)]
-#[transitive(into(A, B, C, D))] // impl From<Z<T>> for D
+#[transitive_into(path(A, B, C, D))] // impl From<Z<T>> for D
 struct Z<T>(PhantomData<T>);
 
 impl<T> From<Z<T>> for A {
@@ -29,7 +29,7 @@ impl<T> From<Z<T>> for A {
 }
 
 #[derive(Transitive)]
-#[transitive(into(A, B, C, D))] // impl From<Y<'a>> for D
+#[transitive_into(path(A, B, C, D))] // impl From<Y<'a>> for D
 struct Y<'a>(PhantomData<&'a ()>);
 
 impl<'a> From<Y<'a>> for A {
@@ -39,7 +39,7 @@ impl<'a> From<Y<'a>> for A {
 }
 
 #[derive(Transitive)]
-#[transitive(into(A, B, C, D))] // impl From<W<N>> for D
+#[transitive_into(path(A, B, C, D))] // impl From<W<N>> for D
 struct W<const N: usize>;
 
 impl<const N: usize> From<W<N>> for A {
@@ -49,7 +49,7 @@ impl<const N: usize> From<W<N>> for A {
 }
 
 #[derive(Transitive)]
-#[transitive(into(A, B, C, D))] // impl From<Q<'a, 'b, N, T, U>> for D
+#[transitive_into(path(A, B, C, D))] // impl From<Q<'a, 'b, N, T, U>> for D
 struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b>(PhantomData<(&'a T, &'b U)>)
 where
     T: Sync;

@@ -2,7 +2,7 @@ mod attr;
 mod fallible;
 mod infallible;
 
-use darling::{FromAttributes, FromDeriveInput};
+use darling::FromDeriveInput;
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::{Attribute, DeriveInput, Generics, Ident, Result as SynResult};
@@ -10,7 +10,12 @@ use syn::{Attribute, DeriveInput, Generics, Ident, Result as SynResult};
 use crate::transitive::attr::{ParsedAttr, TransitiveAttr};
 
 #[derive(FromDeriveInput)]
-#[darling(forward_attrs(transitive))]
+#[darling(forward_attrs(
+    transitive_from,
+    transitive_into,
+    transitive_try_from,
+    transitive_try_into
+))]
 struct DeriveData {
     ident: Ident,
     generics: Generics,
@@ -26,7 +31,7 @@ pub fn transitive_impl(input: DeriveInput) -> SynResult<TokenStream> {
     let mut output = TokenStream::new();
 
     for attr in attrs {
-        let attr = TransitiveAttr::from_attributes(&[attr])?;
+        let attr = TransitiveAttr::try_from(attr)?;
         let attr = ParsedAttr::new(&ident, &generics, attr);
         output.extend(attr.into_token_stream())
     }

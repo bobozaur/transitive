@@ -8,9 +8,9 @@ use syn::Path;
 use crate::transitive::attr::ParsedAttr;
 
 #[derive(FromAttributes)]
-#[darling(attributes(transitive))]
+#[darling(attributes(transitive_try_from))]
 pub struct TransitiveTryFrom {
-    try_from: PathList,
+    path: PathList,
     error: Option<Path>,
 }
 
@@ -18,12 +18,12 @@ impl ToTokens for ParsedAttr<'_, &TransitiveTryFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let first = self.data.try_from.first();
-        let last = self.data.try_from.last();
+        let first = self.data.path.first();
+        let last = self.data.path.last();
 
         let stmts = self
             .data
-            .try_from
+            .path
             .iter()
             .skip(1)
             .map(|ty| quote! {let val: #ty = core::convert::TryFrom::try_from(val)?;})

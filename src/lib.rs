@@ -226,7 +226,7 @@ use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, Error};
 
 /// Derive macro that implements [From] for infallible transitions.
-#[proc_macro_derive(Transitive, attributes(transitive))]
+#[proc_macro_derive(Transitive, attributes(transitive_from, transitive_into, transitive_try_from, transitive_try_into))]
 pub fn transitive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 

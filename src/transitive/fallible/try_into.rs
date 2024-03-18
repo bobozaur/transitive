@@ -6,9 +6,9 @@ use syn::Path;
 use crate::transitive::attr::ParsedAttr;
 
 #[derive(FromAttributes)]
-#[darling(attributes(transitive))]
+#[darling(attributes(transitive_try_into))]
 pub struct TransitiveTryInto {
-    try_into: PathList,
+    path: PathList,
     error: Option<Path>,
 }
 
@@ -16,14 +16,14 @@ impl ToTokens for ParsedAttr<'_, &TransitiveTryInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let last = self.data.try_into.last();
-        let second_last = self.data.try_into.iter().nth(self.data.try_into.len() - 2);
+        let last = self.data.path.last();
+        let second_last = self.data.path.iter().nth(self.data.path.len() - 2);
 
         let stmts = self
             .data
-            .try_into
+            .path
             .iter()
-            .take(self.data.try_into.len() - 1)
+            .take(self.data.path.len() - 1)
             .map(|ty| quote! {let val: #ty = core::convert::TryFrom::try_from(val)?;});
 
         let error = self

@@ -5,22 +5,22 @@ use quote::{quote, ToTokens};
 use crate::transitive::attr::ParsedAttr;
 
 #[derive(FromAttributes)]
-#[darling(attributes(transitive))]
+#[darling(attributes(transitive_into))]
 pub struct TransitiveInto {
-    into: PathList,
+    path: PathList,
 }
 
 impl ToTokens for ParsedAttr<'_, &TransitiveInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let last = self.data.into.last();
+        let last = self.data.path.last();
 
         let stmts = self
             .data
-            .into
+            .path
             .iter()
-            .take(self.data.into.len() - 1)
+            .take(self.data.path.len() - 1)
             .map(|ty| quote! {let val: #ty = core::convert::From::from(val);});
 
         let expanded = quote! {
