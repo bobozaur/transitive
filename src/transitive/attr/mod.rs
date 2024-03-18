@@ -24,5 +24,6 @@ impl FromAttributes for TransitiveAttr {
             .or_else(|_| TransitiveInto::from_attributes(attrs).map(TransitiveAttr::Into))
             .or_else(|_| TransitiveTryFrom::from_attributes(attrs).map(TransitiveAttr::TryFrom))
             .or_else(|_| TransitiveTryInto::from_attributes(attrs).map(TransitiveAttr::TryInto))
+            .map_err(|_| darling::Error::custom("test"))
     }
 }

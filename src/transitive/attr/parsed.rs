@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 use syn::{Generics, Ident};
 
 use super::TransitiveAttr;
@@ -17,51 +17,6 @@ impl<'a, T> ParsedAttr<'a, T> {
             generics,
             data,
         }
-    }
-
-    pub fn generic_parameters(&self) -> TokenStream {
-        let Generics {
-            lt_token,
-            params,
-            gt_token,
-            ..
-        } = self.generics;
-
-        quote! {#lt_token #params #gt_token}
-    }
-
-    /// Note:
-    /// Must ask for key value pairs in `with()`
-    /// and map them against the provided generics.
-    ///
-    /// Then replace the ones with the provided values while
-    /// preserving the ones without values.'
-    /// Should also replace them in their trait bounds.
-
-    pub fn simple_generic_parameters(&self) -> TokenStream {
-        let Generics {
-            lt_token,
-            params,
-            gt_token,
-            ..
-        } = self.generics;
-
-        let iter = params.iter().map(|v| match v {
-            syn::GenericParam::Lifetime(v) => {
-                let tt = &v.lifetime;
-                quote!(#tt)
-            }
-            syn::GenericParam::Type(v) => {
-                let tt = &v.ident;
-                quote!(#tt)
-            }
-            syn::GenericParam::Const(v) => {
-                let tt = &v.ident;
-                quote!(#tt)
-            }
-        });
-
-        quote! {#lt_token #(#iter),* #gt_token}
     }
 }
 
