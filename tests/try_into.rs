@@ -77,7 +77,9 @@ mod try_into_simple {
 
     #[derive(Transitive)]
     #[transitive_try_into(path(A, B, C, D))] // impl TryFrom<Q<'a, 'b, N, T, U>> for D
-    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b>(PhantomData<(&'a T, &'b U)>)
+    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b = &'b str>(
+        PhantomData<(&'a T, &'b U)>,
+    )
     where
         T: Sync;
 

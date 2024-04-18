@@ -146,7 +146,9 @@ mod try_from_custom_err {
 
     #[derive(Transitive)]
     #[transitive_try_from(path(D, C, B, A), error = "ConvErr")] // impl TryFrom<D> for Q<'a, 'b, N, T, U>
-    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b>(PhantomData<(&'a T, &'b U)>)
+    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b = &'b str>(
+        PhantomData<(&'a T, &'b U)>,
+    )
     where
         T: Sync;
 

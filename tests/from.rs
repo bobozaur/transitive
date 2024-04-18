@@ -57,7 +57,7 @@ impl<const N: usize> From<A> for W<N> {
 
 #[derive(Transitive)]
 #[transitive_from(path(D, C, B, A))] // impl From<D> for Q<'a, 'b, N, T, U>
-struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b>(PhantomData<(&'a T, &'b U)>)
+struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b = &'b str>(PhantomData<(&'a T, &'b U)>)
 where
     T: Sync;
 
