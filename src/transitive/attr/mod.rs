@@ -1,14 +1,13 @@
 mod parsed;
 
 use darling::FromAttributes;
+pub use parsed::ParsedAttr;
 use syn::Attribute;
 
 use super::{
     fallible::{TransitiveTryFrom, TransitiveTryInto},
     infallible::{TransitiveFrom, TransitiveInto},
 };
-
-pub use parsed::ParsedAttr;
 
 pub enum TransitiveAttr {
     From(TransitiveFrom),
