@@ -1,8 +1,7 @@
 mod parsed;
 
-use darling::FromAttributes;
 pub use parsed::ParsedAttr;
-use syn::Attribute;
+use syn::{parse::Parse, Error as SynError, MetaList};
 
 use super::{
     fallible::{TransitiveTryFrom, TransitiveTryInto},
@@ -16,24 +15,22 @@ pub enum TransitiveAttr {
     TryInto(TransitiveTryInto),
 }
 
-impl TryFrom<Attribute> for TransitiveAttr {
-    type Error = darling::Error;
+impl Parse for TransitiveAttr {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let MetaList { path, tokens, .. } = MetaList::parse(input)?;
 
-    fn try_from(value: Attribute) -> Result<Self, Self::Error> {
-        let Some(ident) = value.path().get_ident() else {
-            return Err(darling::Error::missing_field("attribute name"));
-        };
+        let ident = path.require_ident()?;
 
-        if ident == "transitive_from" {
-            TransitiveFrom::from_attributes(&[value]).map(TransitiveAttr::From)
-        } else if ident == "transitive_into" {
-            TransitiveInto::from_attributes(&[value]).map(TransitiveAttr::Into)
-        } else if ident == "transitive_try_from" {
-            TransitiveTryFrom::from_attributes(&[value]).map(TransitiveAttr::TryFrom)
-        } else if ident == "transitive_try_into" {
-            TransitiveTryInto::from_attributes(&[value]).map(TransitiveAttr::TryInto)
+        if ident == "from" {
+            syn::parse::<TransitiveFrom>(tokens.into()).map(TransitiveAttr::From)
+        } else if ident == "into" {
+            syn::parse::<TransitiveInto>(tokens.into()).map(TransitiveAttr::Into)
+        } else if ident == "try_from" {
+            syn::parse::<TransitiveTryFrom>(tokens.into()).map(TransitiveAttr::TryFrom)
+        } else if ident == "try_into" {
+            syn::parse::<TransitiveTryInto>(tokens.into()).map(TransitiveAttr::TryInto)
         } else {
-            Err(darling::Error::unsupported_shape(&ident.to_string()))
+            Err(SynError::new(ident.span(), "unknown parameter"))
         }
     }
 }

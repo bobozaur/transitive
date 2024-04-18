@@ -2,39 +2,57 @@ mod attr;
 mod fallible;
 mod infallible;
 
-use darling::FromDeriveInput;
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn::{Attribute, DeriveInput, Generics, Ident, Result as SynResult};
+use syn::{
+    Attribute, DeriveInput, Error as SynError, Generics, Ident, Meta, MetaList, MetaNameValue,
+    Path, Result as SynResult,
+};
 
 use crate::transitive::attr::{ParsedAttr, TransitiveAttr};
 
-#[derive(FromDeriveInput)]
-#[darling(forward_attrs(
-    transitive_from,
-    transitive_into,
-    transitive_try_from,
-    transitive_try_into
-))]
-struct DeriveData {
-    ident: Ident,
-    generics: Generics,
-    attrs: Vec<Attribute>,
-}
+const ATTR_NAME: &str = "transitive";
 
 pub fn transitive_impl(input: DeriveInput) -> SynResult<TokenStream> {
-    let DeriveData {
+    let DeriveInput {
         ident,
         generics,
         attrs,
-    } = DeriveData::from_derive_input(&input)?;
-    let mut output = TokenStream::new();
+        ..
+    } = input;
 
-    for attr in attrs {
-        let attr = TransitiveAttr::try_from(attr)?;
-        let attr = ParsedAttr::new(&ident, &generics, attr);
-        output.extend(attr.into_token_stream())
-    }
+    attrs
+        .into_iter()
+        .map(|attr| process_attribute(attr, &ident, &generics))
+        .collect()
+}
 
-    Ok(output)
+fn process_attribute(
+    attr: Attribute,
+    ident: &Ident,
+    generics: &Generics,
+) -> SynResult<TokenStream> {
+    let tokens = match attr.meta {
+        Meta::Path(path) | Meta::NameValue(MetaNameValue { path, .. }) => return wrong_meta(path),
+        Meta::List(MetaList { path, tokens, .. }) => match path.get_ident() {
+            Some(i) if i == ATTR_NAME => tokens,
+            _ => return Ok(TokenStream::new()),
+        },
+    };
+
+    let attr = syn::parse::<TransitiveAttr>(tokens.into())?;
+    let attr = ParsedAttr::new(ident, generics, attr);
+    Ok(attr.into_token_stream())
+}
+
+fn wrong_meta(path: Path) -> SynResult<TokenStream> {
+    let ident = match path.get_ident() {
+        Some(i) if i == ATTR_NAME => i,
+        _ => return Ok(TokenStream::new()),
+    };
+
+    Err(SynError::new(
+        ident.span(),
+        "only list attributes are allowed",
+    ))
 }

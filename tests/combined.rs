@@ -3,9 +3,9 @@ mod macros;
 use transitive::Transitive;
 
 #[derive(Transitive)]
-#[transitive_from(path(D, C, B))] // impl From<D>for A
-#[transitive_from(path(C, B))] // impl From<C> for A
-#[transitive_try_into(path(B, C, D))] // impl TryFrom<A> for D
+#[transitive(from(D, C, B))] // impl From<D>for A
+#[transitive(from(C, B))] // impl From<C> for A
+#[transitive(try_into(B, C, D))] // impl TryFrom<A> for D
 struct A;
 struct B;
 struct C;

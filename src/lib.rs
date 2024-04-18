@@ -1,13 +1,13 @@
-//! This crate provides derive macros that take care of boilerplate code to make
-//! transitive conversions in Rust using [`From`] and [`TryFrom`] traits.
+//! This crate provides a derive macro that takes care of boilerplate code to make transitive
+//! conversions in Rust using [`From`] and [`TryFrom`] traits.
 //!
-//! It's not magic and it is completely static. The derives here merely implement [`From`] or
+//! It's not magic and it's completely static. The derive here merely implement [`From`] or
 //! [`TryFrom`] between types by relying on already defined impls between types provided in the
 //! path.
 //!
 //! The path taken for transitions must be annotated (correctly) for transitions to work.
-//! Additonally, there can only be one transition between a source and a target type,
-//! as otherwise there would be duplicate trait implementations.
+//! Additonally, there can only be one transition between a source and a target type, as otherwise
+//! there would be duplicate trait implementations.
 //!
 //! The path is provided in the [`#[transitive]`] attribute along with a direction. Assuming we
 //! derive this on type `X`:
@@ -28,15 +28,15 @@
 //! | A            | #[transitive(into(B, C, D))]      | `From<A> for D`     | `From<A> for B`; `From<B> for C`; `From<C> for D`                                                                         |
 //! | A            | #[transitive(from(D, C, B))]      | `From<D> for A`     | `From<D> for C`; `From<C> for B`; `From<B> for A`                                                                         |
 //! | A            | #[transitive(try_into(B, C, D))]  | `TryFrom<A> for D`  | `TryFrom<A> for B`; `TryFrom<B> for C`; `TryFrom<C> for D`; errors must impl `From<ErrType> for <D as TryFrom<C>>::Error` |
-//! | A            | #[transitive(try_from(D, C, B))]  | `TryFrom<D> for A`  | `TryFrom<D> for C`; `TryFrom<C>` for B; `TryFrom<B> for A`; errors must `impl From<ErrType> for <A as TryFrom<B>>::Error` |
+//! | A            | #[transitive(try_from(D, C, B))]  | `TryFrom<D> for A`  | `TryFrom<D> for C`; `TryFrom<C> for B`; `TryFrom<B> for A`; errors must impl `From<ErrType> for <A as TryFrom<B>>::Error` |
 //!
 //!
 //! # Custom error type:
 //!
-//! For `try_from` and `try_into` annotations, the macro attribute can accept an `error = "MyError"`
-//! argument, like so: `#[transitive(try_into(A, B, C), error = "MyError")]`. This overrides the
-//! default behavior and allows specifying a custom error type, but all the error types resulting
-//! from conversions must be convertible to this type.
+//! For `try_from` and `try_into` annotations, the macro attribute can accept an `error = MyError`
+//! argument as the last element, like so: `#[transitive(try_into(A, B, C, error = MyError))]`. This
+//! overrides the default behavior and allows specifying a custom error type, but all the error
+//! types resulting from conversions must be convertible to this type.
 //!
 //! # Examples:
 //!
@@ -150,6 +150,7 @@
 //! nature of the `from` and `try_from` attribute modifiers and the error transitions constraints:
 //!
 //! ```
+//! #![allow(non_camel_case_types)]
 //! use transitive::Transitive;
 //!
 //! // Note how the annotation now considers `A` as target type
@@ -159,7 +160,7 @@
 //! struct A;
 //!
 //! #[derive(Transitive)]
-//! #[transitive(try_from(D, C), error = "ConvErr")] // impl TryFrom<D> for B, with custom error
+//! #[transitive(try_from(D, C, error = ConvErr))] // impl TryFrom<D> for B, with custom error
 //! struct B;
 //! struct C;
 //! struct D;
@@ -231,15 +232,7 @@ use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput, Error};
 
 /// Derive macro that implements [From] for infallible transitions.
-#[proc_macro_derive(
-    Transitive,
-    attributes(
-        transitive_from,
-        transitive_into,
-        transitive_try_from,
-        transitive_try_into
-    )
-)]
+#[proc_macro_derive(Transitive, attributes(transitive))]
 pub fn transitive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
