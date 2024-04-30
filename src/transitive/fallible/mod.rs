@@ -5,8 +5,8 @@ use syn::{
     parse::Parse, punctuated::Punctuated, spanned::Spanned, Error as SynError, Expr, Meta, Path,
     Token,
 };
-pub use try_from::TransitiveTryFrom;
-pub use try_into::TransitiveTryInto;
+pub use try_from::TryTransitionFrom;
+pub use try_into::TryTransitionInto;
 
 /// A path list that may contain a custom error type.
 pub struct FalliblePathList {

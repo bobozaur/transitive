@@ -2,27 +2,28 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse::Parse, punctuated::Punctuated, Path, Token};
 
-use crate::transitive::TokenizableAttr;
+use crate::transitive::TokenizablePath;
 
-pub struct TransitiveInto(Punctuated<Path, Token![,]>);
+/// Path corresponding to a [`#[transitive(into(..))`] path.
+pub struct TransitionInto(Punctuated<Path, Token![,]>);
 
-impl Parse for TransitiveInto {
+impl Parse for TransitionInto {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         Punctuated::parse_terminated(input).map(Self)
     }
 }
 
-impl ToTokens for TokenizableAttr<'_, &TransitiveInto> {
+impl ToTokens for TokenizablePath<'_, &TransitionInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let last = self.attr.0.last();
+        let last = self.path.0.last();
 
         let stmts = self
-            .attr
+            .path
             .0
             .iter()
-            .take(self.attr.0.len() - 1)
+            .take(self.path.0.len() - 1)
             .map(|ty| quote! {let val: #ty = core::convert::From::from(val);});
 
         let expanded = quote! {
