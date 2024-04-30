@@ -5,7 +5,7 @@ use quote::{quote, ToTokens};
 use syn::parse::Parse;
 
 use super::FalliblePathList;
-use crate::transitive::attr::ParsedAttr;
+use crate::transitive::TokenizableAttr;
 
 pub struct TransitiveTryFrom(FalliblePathList);
 
@@ -15,15 +15,15 @@ impl Parse for TransitiveTryFrom {
     }
 }
 
-impl ToTokens for ParsedAttr<'_, &TransitiveTryFrom> {
+impl ToTokens for TokenizableAttr<'_, &TransitiveTryFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let first = self.data.0.path_list.first();
-        let last = self.data.0.path_list.last();
+        let first = self.attr.0.path_list.first();
+        let last = self.attr.0.path_list.last();
 
         let stmts = self
-            .data
+            .attr
             .0
             .path_list
             .iter()
@@ -34,7 +34,7 @@ impl ToTokens for ParsedAttr<'_, &TransitiveTryFrom> {
             ));
 
         let error = self
-            .data
+            .attr
             .0
             .error
             .as_ref()

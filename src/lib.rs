@@ -229,14 +229,15 @@
 mod transitive;
 
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput, Error};
+use quote::ToTokens;
+use syn::parse_macro_input;
+
+use crate::transitive::TransitiveInput;
 
 /// Derive macro that implements [From] for infallible transitions.
 #[proc_macro_derive(Transitive, attributes(transitive))]
 pub fn transitive(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-
-    transitive::transitive_impl(input)
-        .unwrap_or_else(Error::into_compile_error)
+    parse_macro_input!(input as TransitiveInput)
+        .to_token_stream()
         .into()
 }

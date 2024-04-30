@@ -8,6 +8,7 @@ use syn::{
 pub use try_from::TransitiveTryFrom;
 pub use try_into::TransitiveTryInto;
 
+/// A path list that may contain a custom error type.
 pub struct FalliblePathList {
     path_list: Vec<Path>,
     error: Option<Path>,
@@ -25,33 +26,21 @@ impl Parse for FalliblePathList {
         while let Some(meta) = iter.next() {
             // If this is not the last element then it's definitely part of the path list
             if iter.peek().is_some() {
-                let Meta::Path(path) = meta else {
-                    return Err(SynError::new(meta.span(), "invalid value in the path list"));
+                match meta {
+                    Meta::Path(path) => path_list.push(path),
+                    _ => return Err(SynError::new(meta.span(), "invalid value in path list")),
                 };
-
-                path_list.push(path);
             } else {
                 // We reached the last element which could be the custom error type
                 match meta {
+                    // Just a regular type path in the conversion path
                     Meta::Path(p) => path_list.push(p),
-                    Meta::NameValue(n) => match n.path.get_ident() {
-                        Some(i) if i == "error" => match n.value {
-                            Expr::Path(p) => error = Some(p.path),
-                            _ => {
-                                return Err(SynError::new(
-                                    n.value.span(),
-                                    "invalid value in the path list",
-                                ))
-                            }
-                        },
-                        _ => {
-                            return Err(SynError::new(
-                                n.path.span(),
-                                "invalid value in the path list",
-                            ))
-                        }
+                    // Custom error, but must check that it's a type path
+                    Meta::NameValue(n) if n.path.is_ident("error") => match n.value {
+                        Expr::Path(p) => error = Some(p.path),
+                        _ => return Err(SynError::new(n.value.span(), "error must be a type")),
                     },
-                    _ => return Err(SynError::new(meta.span(), "invalid value in the path list")),
+                    _ => return Err(SynError::new(meta.span(), "invalid value in path list")),
                 }
             }
         }
