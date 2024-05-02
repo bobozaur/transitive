@@ -1,10 +1,10 @@
+mod macros;
+
 use transitive::Transitive;
 
-use crate::impl_from;
-
 #[derive(Transitive)]
-#[transitive(from(D, C, B))] // impl From<D>for A
-#[transitive(from(C, B))] // impl From<C> for A
+// impl From<D>for A and impl From<C> for A
+#[transitive(from(D, C, B), from(C, B))]
 #[transitive(try_into(B, C, D))] // impl TryFrom<A> for D
 struct A;
 struct B;
@@ -19,8 +19,9 @@ impl_from!(A to B);
 impl_from!(B to C);
 impl_from!(C to D);
 
-pub fn combined_attributes() {
-    A::from(D);
-    A::from(C);
-    D::try_from(A);
+#[test]
+pub fn test_combined_attributes() {
+    let _ = A::from(D);
+    let _ = A::from(C);
+    let _ = D::try_from(A);
 }

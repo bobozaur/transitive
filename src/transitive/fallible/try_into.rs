@@ -1,43 +1,52 @@
-use darling::{util::PathList, FromAttributes};
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::Path;
+use syn::{
+    parse::{Parse, ParseStream},
+    Result as SynResult,
+};
 
-use crate::transitive::attr::AttrWithIdent;
+use super::FalliblePathList;
+use crate::transitive::TokenizablePath;
 
-#[derive(FromAttributes)]
-#[darling(attributes(transitive))]
-pub struct TransitiveTryInto {
-    try_into: PathList,
-    error: Option<Path>,
+/// Path corresponding to a [`#[transitive(try_into(..))`] path.
+pub struct TryTransitionInto(FalliblePathList);
+
+impl Parse for TryTransitionInto {
+    fn parse(input: ParseStream) -> SynResult<Self> {
+        FalliblePathList::parse(input).map(Self)
+    }
 }
 
-impl ToTokens for AttrWithIdent<'_, &TransitiveTryInto> {
+impl ToTokens for TokenizablePath<'_, &TryTransitionInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let name = &self.ident;
-
-        let last = self.data.try_into.last();
-        let second_last = self.data.try_into.iter().nth(self.data.try_into.len() - 2);
+        let name = self.ident;
+        let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
+        let last = self.path.0.path_list.last();
+        let second_last = self.path.0.path_list.get(self.path.0.path_list.len() - 2);
 
         let stmts = self
-            .data
-            .try_into
+            .path
+            .0
+            .path_list
             .iter()
-            .map(|ty| quote! {let val = #ty::try_from(val)?;});
+            .take(self.path.0.path_list.len() - 1)
+            .map(|ty| quote! {let val: #ty = core::convert::TryFrom::try_from(val)?;});
 
         let error = self
-            .data
+            .path
+            .0
             .error
             .as_ref()
             .map(|e| quote!(#e))
             .unwrap_or_else(|| quote!(<#last as TryFrom<#second_last>>::Error));
 
         let expanded = quote! {
-            impl core::convert::TryFrom<#name> for #last {
+            impl #impl_generics core::convert::TryFrom<#name #ty_generics> for #last #where_clause {
                 type Error = #error;
 
-                fn try_from(val: #name) -> core::result::Result<Self, Self::Error> {
+                fn try_from(val: #name #ty_generics) -> core::result::Result<Self, Self::Error> {
                     #(#stmts)*
+                    let val = core::convert::TryFrom::try_from(val)?;
                     Ok(val)
                 }
             }

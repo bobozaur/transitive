@@ -1,22 +1,21 @@
-//! This crate provides derive macros that take care of boilerplate code to make
-//! transitive conversions in Rust using [`From`] and [`TryFrom`] traits.
+//! This crate provides a derive macro that takes care of boilerplate code to make transitive
+//! conversions in Rust using [`From`] and [`TryFrom`] traits.
 //!
-//! It's not magic and it is completely static. The derives here merely implement [`From`] or [`TryFrom`]
-//! between types by relying on already defined impls between types provided in the path.
+//! It's not magic and it's completely static. The derive here merely implements [`From`] or
+//! [`TryFrom`] between types by relying on existent impls between items in the path.
 //!
 //! The path taken for transitions must be annotated (correctly) for transitions to work.
-//! Additonally, there can only be one transition between a source and a target type,
-//! as otherwise there would be duplicate trait implementations.
+//! Additonally, there can only be one transition between a source and a target type, as otherwise
+//! there would be duplicate trait implementations.
 //!
-//! The path is provided in the [`#[transitive]`] attribute along with a direction. Assuming we derive this on type `X`:
-//! - `#[transitive(from(A, B, C))]` results in: A -> B -> C -> X
-//! - `#[transitive(into(A, B, C))]` results in: X -> A -> B -> C
-//! - `#[transitive(try_from(A, B, C))]` results in the fallible version of: A -> B -> C -> X
-//! - `#[transitive(try_into(A, B, C))]` results in the fallible version of: X -> A -> B -> C
+//! The path is provided in the [`#[transitive]`] attribute along with a direction:
 //!
-//! By default, for fallible conversions the error types must be convertible to the error type of the last conversion taking place.
-//! So, in a `#[transitive(try_from(A, B, C))]` annotation on type `X`, the last conversion taking place is `C -> X`.
-//! Let's call this `ErrC_X`. All error types resulting from the previous conversions must implement `From<Err> for ErrC_X`.
+//! ```ignore, compile_fail
+//! #[derive(Transitive)]
+//! #[transitive(from(D, C, B))] // Results in `impl From<D> for A` as `D -> C -> B -> A`
+//! #[transitive(into(B, C, D))] // Results in `impl From<A> for D` as `A -> B -> C -> D`
+//! struct A;
+//! ```
 //!
 //! # Conversions table:
 //!
@@ -25,18 +24,17 @@
 //! | A            | #[transitive(into(B, C, D))]      | `From<A> for D`     | `From<A> for B`; `From<B> for C`; `From<C> for D`                                                                         |
 //! | A            | #[transitive(from(D, C, B))]      | `From<D> for A`     | `From<D> for C`; `From<C> for B`; `From<B> for A`                                                                         |
 //! | A            | #[transitive(try_into(B, C, D))]  | `TryFrom<A> for D`  | `TryFrom<A> for B`; `TryFrom<B> for C`; `TryFrom<C> for D`; errors must impl `From<ErrType> for <D as TryFrom<C>>::Error` |
-//! | A            | #[transitive(try_from(D, C, B))]  | `TryFrom<D> for A`  | `TryFrom<D> for C`; `TryFrom<C>` for B; `TryFrom<B> for A`; errors must `impl From<ErrType> for <A as TryFrom<B>>::Error` |
+//! | A            | #[transitive(try_from(D, C, B))]  | `TryFrom<D> for A`  | `TryFrom<D> for C`; `TryFrom<C> for B`; `TryFrom<B> for A`; errors must impl `From<ErrType> for <A as TryFrom<B>>::Error` |
 //!
 //!
 //! # Custom error type:
 //!
-//! For `try_from` and `try_into` annotations, the macro attribute can accept an `error = "MyError"` argument,
-//! like so: `#[transitive(try_into(A, B, C), error = "MyError")]`. This overrides the default behavior and allows
-//! specifying a custom error type, but all the error types resulting from conversions must be convertible to this type.
+//! For `try_from` and `try_into` annotations, the macro attribute can accept an `error = MyError`
+//! argument as the last element, like so: `#[transitive(try_into(A, B, C, error = MyError))]`. This
+//! overrides the default behavior and allows specifying a custom error type, but all the error
+//! types resulting from conversions must be convertible to this type.
 //!
 //! # Examples:
-//!
-//! Assume you have types `A`, `B`, `C` and `D`:
 //!
 //! ```
 //! use transitive::Transitive;
@@ -107,8 +105,6 @@
 //! C::from(A); // does not compile
 //! ```
 //!
-//! The derive supports multiple `transitive` attribute instances, each providing a list of types as a path:
-//!
 //! ```
 //! use transitive::Transitive;
 //!
@@ -145,7 +141,8 @@
 //! nature of the `from` and `try_from` attribute modifiers and the error transitions constraints:
 //!
 //! ```
-//! use transitive::{Transitive};
+//! #![allow(non_camel_case_types)]
+//! use transitive::Transitive;
 //!
 //! // Note how the annotation now considers `A` as target type
 //! // and `D`, the first element in the type list, as source.
@@ -154,7 +151,7 @@
 //! struct A;
 //!
 //! #[derive(Transitive)]
-//! #[transitive(try_from(D, C), error = "ConvErr")] // impl TryFrom<D> for B, with custom error
+//! #[transitive(try_from(D, C, error = ConvErr))] // impl TryFrom<D> for B, with custom error
 //! struct B;
 //! struct C;
 //! struct D;
@@ -196,7 +193,7 @@
 //!     type Error = ErrD_C;
 //!
 //!     fn try_from(val: D) -> Result<Self, Self::Error> {
-//!         Ok(Self)    
+//!         Ok(Self)
 //!     }
 //! };
 //!
@@ -204,7 +201,7 @@
 //!     type Error = ErrC_B;
 //!
 //!     fn try_from(val: C) -> Result<Self, Self::Error> {
-//!         Ok(Self)    
+//!         Ok(Self)
 //!     }
 //! };
 //!
@@ -212,7 +209,7 @@
 //!     type Error = ErrB_A;
 //!
 //!     fn try_from(val: B) -> Result<Self, Self::Error> {
-//!         Ok(Self)    
+//!         Ok(Self)
 //!     }
 //! };
 //!
@@ -223,14 +220,15 @@
 mod transitive;
 
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput, Error};
+use quote::ToTokens;
+use syn::parse_macro_input;
+
+use crate::transitive::TransitiveInput;
 
 /// Derive macro that implements [From] for infallible transitions.
 #[proc_macro_derive(Transitive, attributes(transitive))]
 pub fn transitive(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-
-    transitive::transitive_impl(input)
-        .unwrap_or_else(Error::into_compile_error)
+    parse_macro_input!(input as TransitiveInput)
+        .to_token_stream()
         .into()
 }

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [1.0.0] - 2024-05-02
+
+### Added
+ - [#6](https://github.com/bobozaur/transitive/issues/6): Added generics support on the derived type.
+
+### Changed
+  
+- Updated dependencies.
+- Removed usage of `darling`.
+- Improved path direction parsing.
  
 ## [0.5.0] - 2023-07-03
  

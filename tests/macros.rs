@@ -2,7 +2,7 @@
 macro_rules! impl_from {
     ($source:ident to $target:ident) => {
         impl From<$source> for $target {
-            fn from(val: $source) -> $target {
+            fn from(_val: $source) -> $target {
                 $target
             }
         }
@@ -15,7 +15,7 @@ macro_rules! impl_try_from {
         impl TryFrom<$source> for $target {
             type Error = $err;
 
-            fn try_from(val: $source) -> Result<Self, Self::Error> {
+            fn try_from(_val: $source) -> Result<Self, Self::Error> {
                 Ok($target)
             }
         }
