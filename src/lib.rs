@@ -225,7 +225,6 @@ use syn::parse_macro_input;
 
 use crate::transitive::TransitiveInput;
 
-/// Derive macro that implements [From] for infallible transitions.
 #[proc_macro_derive(Transitive, attributes(transitive))]
 pub fn transitive(input: TokenStream) -> TokenStream {
     parse_macro_input!(input as TransitiveInput)
