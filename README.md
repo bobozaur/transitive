@@ -17,11 +17,11 @@ for converting from/to the derived type and a target type, given a path of trans
 use transitive::Transitive;
 
 #[derive(Transitive)]
-#[transitive_into(path(B, C, D))] // impl From<A> for D by doing A -> B -> C -> D
+#[transitive(into(B, C, D))] // impl From<A> for D by doing A -> B -> C -> D
 struct A;
 
 #[derive(Transitive)]
-#[transitive_into(path(C, D))] // impl From<B> for D by doing B -> C -> D
+#[transitive(into(C, D))] // impl From<B> for D by doing B -> C -> D
 struct B;
 struct C;
 struct D;

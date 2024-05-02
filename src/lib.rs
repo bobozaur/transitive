@@ -1,25 +1,21 @@
 //! This crate provides a derive macro that takes care of boilerplate code to make transitive
 //! conversions in Rust using [`From`] and [`TryFrom`] traits.
 //!
-//! It's not magic and it's completely static. The derive here merely implement [`From`] or
-//! [`TryFrom`] between types by relying on already defined impls between types provided in the
-//! path.
+//! It's not magic and it's completely static. The derive here merely implements [`From`] or
+//! [`TryFrom`] between types by relying on existent impls between items in the path.
 //!
 //! The path taken for transitions must be annotated (correctly) for transitions to work.
 //! Additonally, there can only be one transition between a source and a target type, as otherwise
 //! there would be duplicate trait implementations.
 //!
-//! The path is provided in the [`#[transitive]`] attribute along with a direction. Assuming we
-//! derive this on type `X`:
-//! - `#[transitive(from(A, B, C))]` results in: A -> B -> C -> X
-//! - `#[transitive(into(A, B, C))]` results in: X -> A -> B -> C
-//! - `#[transitive(try_from(A, B, C))]` results in the fallible version of: A -> B -> C -> X
-//! - `#[transitive(try_into(A, B, C))]` results in the fallible version of: X -> A -> B -> C
+//! The path is provided in the [`#[transitive]`] attribute along with a direction:
 //!
-//! By default, for fallible conversions the error types must be convertible to the error type of
-//! the last conversion taking place. So, in a `#[transitive(try_from(A, B, C))]` annotation on type
-//! `X`, the last conversion taking place is `C -> X`. Let's call this `ErrC_X`. All error types
-//! resulting from the previous conversions must implement `From<Err> for ErrC_X`.
+//! ```ignore, compile_fail
+//! #[derive(Transitive)]
+//! #[transitive(from(D, C, B))] // Results in `impl From<D> for A` as `D -> C -> B -> A`
+//! #[transitive(into(B, C, D))] // Results in `impl From<A> for D` as `A -> B -> C -> D`
+//! struct A;
+//! ```
 //!
 //! # Conversions table:
 //!
@@ -39,8 +35,6 @@
 //! types resulting from conversions must be convertible to this type.
 //!
 //! # Examples:
-//!
-//! Assume you have types `A`, `B`, `C` and `D`:
 //!
 //! ```
 //! use transitive::Transitive;
@@ -110,9 +104,6 @@
 //! D::from(A); // works
 //! C::from(A); // does not compile
 //! ```
-//!
-//! The derive supports multiple `transitive` attribute instances, each providing a list of types as
-//! a path:
 //!
 //! ```
 //! use transitive::Transitive;
