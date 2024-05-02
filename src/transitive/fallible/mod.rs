@@ -2,8 +2,10 @@ mod try_from;
 mod try_into;
 
 use syn::{
-    parse::Parse, punctuated::Punctuated, spanned::Spanned, Error as SynError, Expr, Meta, Path,
-    Token,
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
+    spanned::Spanned,
+    Error as SynError, Expr, Meta, Path, Result as SynResult, Token,
 };
 pub use try_from::TryTransitionFrom;
 pub use try_into::TryTransitionInto;
@@ -15,7 +17,7 @@ pub struct FalliblePathList {
 }
 
 impl Parse for FalliblePathList {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+    fn parse(input: ParseStream) -> SynResult<Self> {
         let meta_list = Punctuated::<Meta, Token![,]>::parse_terminated(input)?;
 
         let mut path_list = Vec::with_capacity(meta_list.len());

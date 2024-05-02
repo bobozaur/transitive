@@ -1,6 +1,9 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::parse::Parse;
+use syn::{
+    parse::{Parse, ParseStream},
+    Result as SynResult,
+};
 
 use super::FalliblePathList;
 use crate::transitive::TokenizablePath;
@@ -9,7 +12,7 @@ use crate::transitive::TokenizablePath;
 pub struct TryTransitionInto(FalliblePathList);
 
 impl Parse for TryTransitionInto {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+    fn parse(input: ParseStream) -> SynResult<Self> {
         FalliblePathList::parse(input).map(Self)
     }
 }

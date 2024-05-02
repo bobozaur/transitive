@@ -1,6 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse::Parse, punctuated::Punctuated, Path, Token};
+use syn::{
+    parse::{Parse, ParseStream},
+    punctuated::Punctuated,
+    Path, Result as SynResult, Token,
+};
 
 use crate::transitive::TokenizablePath;
 
@@ -8,7 +12,7 @@ use crate::transitive::TokenizablePath;
 pub struct TransitionInto(Punctuated<Path, Token![,]>);
 
 impl Parse for TransitionInto {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+    fn parse(input: ParseStream) -> SynResult<Self> {
         Punctuated::parse_terminated(input).map(Self)
     }
 }
