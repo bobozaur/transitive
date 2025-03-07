@@ -3,8 +3,8 @@ mod macros;
 use transitive::Transitive;
 
 #[derive(Transitive)]
-// impl From<D>for A and impl From<C> for A
-#[transitive(from(D, C, B), from(C, B))]
+#[expect(clippy::duplicated_attributes)]
+#[transitive(from(D, C, B), from(C, B))] // impl From<D>for A and impl From<C> for A
 #[transitive(try_into(B, C, D))] // impl TryFrom<A> for D
 struct A;
 struct B;

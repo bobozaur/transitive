@@ -56,7 +56,7 @@ mod try_from_simple {
     #[transitive(try_from(D, C, B, A))] // impl TryFrom<D> for Y<'a>
     struct Y<'a>(PhantomData<&'a ()>);
 
-    impl<'a> TryFrom<A> for Y<'a> {
+    impl TryFrom<A> for Y<'_> {
         type Error = ErrBA;
 
         fn try_from(_value: A) -> Result<Self, Self::Error> {

@@ -18,6 +18,7 @@ impl_from!(B to A);
 impl_from!(C to B);
 impl_from!(D to C);
 
+#[expect(clippy::duplicated_attributes)]
 #[derive(Transitive)]
 #[transitive(from(D, C, B, A))] // impl From<D> for Z<T>
 #[transitive(from(C, B))] // impl From<D> for Z<T>
@@ -39,7 +40,7 @@ impl<T> From<B> for Z<T> {
 #[transitive(from(D, C, B, A))] // impl From<D> for Y<'a>
 struct Y<'a>(PhantomData<&'a ()>);
 
-impl<'a> From<A> for Y<'a> {
+impl From<A> for Y<'_> {
     fn from(_value: A) -> Self {
         Self(PhantomData)
     }
