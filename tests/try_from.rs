@@ -108,6 +108,18 @@ mod try_from_simple {
         }
     }
 
+    #[derive(Transitive)]
+    #[transitive(try_from(Q<'a, 'static, 2, T ,()>, A))] // impl TryFrom<Q<'a, 'static, 2, T, ()>> for P<'a, T>
+    struct P<'a, T: Send + Sync>(PhantomData<fn() -> &'a T>);
+
+    impl<T: Send + Sync> TryFrom<A> for P<'_, T> {
+        type Error = Infallible;
+
+        fn try_from(_: A) -> Result<Self, Self::Error> {
+            Ok(P(PhantomData))
+        }
+    }
+
     #[test]
     pub fn test_try_from() {
         let _ = A::try_from(D);
@@ -117,6 +129,7 @@ mod try_from_simple {
         let _ = W::<2>::try_from(D);
         let _ = Q::<2, (), ()>::try_from(D);
         let _ = G::try_from(Q::<'static, 'static, 2, (), ()>(PhantomData));
+        let _ = P::try_from(Q::<'static, 'static, 2, (), ()>(PhantomData));
     }
 }
 
@@ -194,10 +207,23 @@ mod try_from_custom_err {
         }
     }
 
+    #[derive(Transitive)]
+    #[transitive(try_from(Q<'a, 'static, 2, T ,()>, A))] // impl TryFrom<Q<'a, 'static, 2, T, ()>> for P<'a, T>
+    struct P<'a, T: Send + Sync>(PhantomData<fn() -> &'a T>);
+
+    impl<T: Send + Sync> TryFrom<A> for P<'_, T> {
+        type Error = ConvErr;
+
+        fn try_from(_: A) -> Result<Self, Self::Error> {
+            Ok(P(PhantomData))
+        }
+    }
+
     #[test]
     pub fn test_try_from_custom_err() {
         let _ = A::try_from(D);
         let _ = Q::<2, (), ()>::try_from(D);
         let _ = G::try_from(Q::<'static, 'static, 2, (), ()>(PhantomData));
+        let _ = P::try_from(Q::<'static, 'static, 2, (), ()>(PhantomData));
     }
 }
