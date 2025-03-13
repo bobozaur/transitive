@@ -3,7 +3,7 @@ mod macros;
 use transitive::Transitive;
 
 mod try_from_simple {
-    use std::marker::PhantomData;
+    use std::{convert::Infallible, marker::PhantomData};
 
     use super::*;
 
@@ -78,18 +78,33 @@ mod try_from_simple {
 
     #[derive(Transitive)]
     #[transitive(try_from(D, C, B, A))] // impl TryFrom<D> for Q<'a, 'b, N, T, U>
-    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b>(PhantomData<(&'a T, &'b U)>)
-    where
-        T: Sync;
+    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b>(PhantomData<(&'a T, &'b U)>);
 
-    impl<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b> TryFrom<A> for Q<'a, 'b, N, T, U>
-    where
-        T: Sync,
-    {
+    impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> TryFrom<A> for Q<'a, 'b, N, T, U> {
         type Error = ErrBA;
 
         fn try_from(_value: A) -> Result<Self, Self::Error> {
             Ok(Self(PhantomData))
+        }
+    }
+
+    #[derive(Transitive)]
+    #[transitive(try_from(Q<'static, 'static, 2, () ,()>, A))] // impl TryFrom<Q<'static, 'static, 2, (), ()>> for G
+    struct G;
+
+    impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> TryFrom<Q<'a, 'b, N, T, U>> for A {
+        type Error = Infallible;
+
+        fn try_from(_: Q<'a, 'b, N, T, U>) -> Result<Self, Self::Error> {
+            Ok(A)
+        }
+    }
+
+    impl TryFrom<A> for G {
+        type Error = Infallible;
+
+        fn try_from(_: A) -> Result<Self, Self::Error> {
+            Ok(G)
         }
     }
 
@@ -101,6 +116,7 @@ mod try_from_simple {
         let _ = Y::try_from(D);
         let _ = W::<2>::try_from(D);
         let _ = Q::<2, (), ()>::try_from(D);
+        let _ = G::try_from(Q::<'static, 'static, 2, (), ()>(PhantomData));
     }
 }
 
@@ -146,16 +162,11 @@ mod try_from_custom_err {
 
     #[derive(Transitive)]
     #[transitive(try_from(D, C, B, A, error = ConvErr))] // impl TryFrom<D> for Q<'a, 'b, N, T, U>
-    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b = &'b str>(
+    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b = &'b str>(
         PhantomData<(&'a T, &'b U)>,
-    )
-    where
-        T: Sync;
+    );
 
-    impl<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b> TryFrom<A> for Q<'a, 'b, N, T, U>
-    where
-        T: Sync,
-    {
+    impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> TryFrom<A> for Q<'a, 'b, N, T, U> {
         type Error = ConvErr;
 
         fn try_from(_value: A) -> Result<Self, Self::Error> {
@@ -163,9 +174,30 @@ mod try_from_custom_err {
         }
     }
 
+    #[derive(Transitive)]
+    #[transitive(try_from(Q<'static, 'static, 2, () ,()>, A, error = ConvErr))] // impl TryFrom<Q<'static, 'static, 2, (), ()>> for G
+    struct G;
+
+    impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> TryFrom<Q<'a, 'b, N, T, U>> for A {
+        type Error = ConvErr;
+
+        fn try_from(_: Q<'a, 'b, N, T, U>) -> Result<Self, Self::Error> {
+            Ok(A)
+        }
+    }
+
+    impl TryFrom<A> for G {
+        type Error = ConvErr;
+
+        fn try_from(_: A) -> Result<Self, Self::Error> {
+            Ok(G)
+        }
+    }
+
     #[test]
     pub fn test_try_from_custom_err() {
         let _ = A::try_from(D);
         let _ = Q::<2, (), ()>::try_from(D);
+        let _ = G::try_from(Q::<'static, 'static, 2, (), ()>(PhantomData));
     }
 }

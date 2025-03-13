@@ -3,13 +3,13 @@ use quote::{quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Path, Result as SynResult, Token,
+    Result as SynResult, Token, Type,
 };
 
 use crate::transitive::TokenizablePath;
 
 /// Path corresponding to a [`#[transitive(into(..))`] path.
-pub struct TransitionInto(Punctuated<Path, Token![,]>);
+pub struct TransitionInto(Punctuated<Type, Token![,]>);
 
 impl Parse for TransitionInto {
     fn parse(input: ParseStream) -> SynResult<Self> {
