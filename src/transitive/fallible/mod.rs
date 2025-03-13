@@ -25,7 +25,7 @@ impl Parse for FalliblePathList {
         for attr in attr_list {
             match attr {
                 Item::Type(ty) if error.is_some() => {
-                    let msg = "types not allowed after 'error' or 'bounds'";
+                    let msg = "types not allowed after 'error'";
                     return Err(SynError::new_spanned(ty, msg));
                 }
                 // Just a regular type path in the conversion path
