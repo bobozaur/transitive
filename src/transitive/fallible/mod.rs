@@ -60,10 +60,12 @@ impl Parse for Item {
             .and_then(|ident| fork.parse::<Token![=]>().map(|_| ident));
 
         match res {
+            // We got an `error = MyType` argument
             Ok(path) if path == "error" => {
                 input.advance_to(&fork);
                 input.parse().map(Self::Error)
             }
+            // Try to parse anything else as a type in the path list
             _ => input.parse().map(Self::Type),
         }
     }
