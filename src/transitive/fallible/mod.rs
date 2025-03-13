@@ -2,52 +2,71 @@ mod try_from;
 mod try_into;
 
 use syn::{
-    parse::{Parse, ParseStream},
+    parse::{discouraged::Speculative, Parse, ParseStream},
     punctuated::Punctuated,
-    spanned::Spanned,
-    Error as SynError, Expr, Meta, Path, Result as SynResult, Token,
+    Error as SynError, Ident, Result as SynResult, Token, Type,
 };
 pub use try_from::TryTransitionFrom;
 pub use try_into::TryTransitionInto;
 
 /// A path list that may contain a custom error type.
 pub struct FalliblePathList {
-    path_list: Vec<Path>,
-    error: Option<Path>,
+    type_list: Vec<Type>,
+    error: Option<Type>,
 }
 
 impl Parse for FalliblePathList {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        let meta_list = Punctuated::<Meta, Token![,]>::parse_terminated(input)?;
+        let attr_list = Punctuated::<Item, Token![,]>::parse_terminated(input)?;
 
-        let mut path_list = Vec::with_capacity(meta_list.len());
+        let mut type_list = Vec::with_capacity(attr_list.len());
         let mut error = None;
 
-        let mut iter = meta_list.into_iter().peekable();
-
-        while let Some(meta) = iter.next() {
-            // If this is not the last element then it's definitely part of the path list
-            if iter.peek().is_some() {
-                match meta {
-                    Meta::Path(path) => path_list.push(path),
-                    _ => return Err(SynError::new(meta.span(), "invalid value in path list")),
-                };
-            } else {
-                // We reached the last element which could be the custom error type
-                match meta {
-                    // Just a regular type path in the conversion path
-                    Meta::Path(p) => path_list.push(p),
-                    // Custom error, but must check that it's a type path
-                    Meta::NameValue(n) if n.path.is_ident("error") => match n.value {
-                        Expr::Path(p) => error = Some(p.path),
-                        _ => return Err(SynError::new(n.value.span(), "error must be a type")),
-                    },
-                    _ => return Err(SynError::new(meta.span(), "invalid value in path list")),
+        for attr in attr_list {
+            match attr {
+                Item::Type(ty) if error.is_some() => {
+                    let msg = "types not allowed after 'error'";
+                    return Err(SynError::new_spanned(ty, msg));
                 }
+                // Just a regular type path in the conversion path
+                Item::Type(ty) => type_list.push(ty),
+                Item::Error(err) if error.is_some() => {
+                    let msg = "'error' not allowed multiple times";
+                    return Err(SynError::new_spanned(err, msg));
+                }
+                // Custom error, but must check that it's a type path
+                Item::Error(err) => error = Some(err),
             }
         }
 
-        let output = Self { path_list, error };
+        let output = Self { type_list, error };
+
         Ok(output)
+    }
+}
+
+/// An item in the parameters list of an attribute.
+pub enum Item {
+    Type(Type),
+    Error(Type),
+}
+
+impl Parse for Item {
+    fn parse(input: ParseStream) -> SynResult<Self> {
+        let fork = input.fork();
+        // Parse the ident name and the equal sign after it
+        let res = fork
+            .parse::<Ident>()
+            .and_then(|ident| fork.parse::<Token![=]>().map(|_| ident));
+
+        match res {
+            // We got an `error = MyType` argument
+            Ok(path) if path == "error" => {
+                input.advance_to(&fork);
+                input.parse().map(Self::Error)
+            }
+            // Try to parse anything else as a type in the path list
+            _ => input.parse().map(Self::Type),
+        }
     }
 }

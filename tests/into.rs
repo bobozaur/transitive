@@ -50,14 +50,11 @@ impl<const N: usize> From<W<N>> for A {
 
 #[derive(Transitive)]
 #[transitive(into(A, B, C, D))] // impl From<Q<'a, 'b, N, T, U>> for D
-struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b = &'b str>(PhantomData<(&'a T, &'b U)>)
-where
-    T: Sync;
+struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b = &'b str>(
+    PhantomData<(&'a T, &'b U)>,
+);
 
-impl<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b> From<Q<'a, 'b, N, T, U>> for A
-where
-    T: Sync,
-{
+impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> From<Q<'a, 'b, N, T, U>> for A {
     fn from(_value: Q<'a, 'b, N, T, U>) -> Self {
         Self
     }

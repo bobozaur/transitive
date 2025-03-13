@@ -23,13 +23,13 @@ impl ToTokens for TokenizablePath<'_, &TryTransitionFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let first = self.path.0.path_list.first();
-        let last = self.path.0.path_list.last();
+        let first = self.path.0.type_list.first();
+        let last = self.path.0.type_list.last();
 
         let stmts = self
             .path
             .0
-            .path_list
+            .type_list
             .iter()
             .skip(1)
             .map(|ty| quote! {let val: #ty = core::convert::TryFrom::try_from(val)?;})

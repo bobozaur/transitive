@@ -18,6 +18,7 @@ impl_from!(B to A);
 impl_from!(C to B);
 impl_from!(D to C);
 
+#[allow(clippy::duplicated_attributes)]
 #[derive(Transitive)]
 #[transitive(from(D, C, B, A))] // impl From<D> for Z<T>
 #[transitive(from(C, B))] // impl From<D> for Z<T>
@@ -39,7 +40,7 @@ impl<T> From<B> for Z<T> {
 #[transitive(from(D, C, B, A))] // impl From<D> for Y<'a>
 struct Y<'a>(PhantomData<&'a ()>);
 
-impl<'a> From<A> for Y<'a> {
+impl From<A> for Y<'_> {
     fn from(_value: A) -> Self {
         Self(PhantomData)
     }
@@ -57,14 +58,11 @@ impl<const N: usize> From<A> for W<N> {
 
 #[derive(Transitive)]
 #[transitive(from(D, C, B, A))] // impl From<D> for Q<'a, 'b, N, T, U>
-struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b = &'b str>(PhantomData<(&'a T, &'b U)>)
-where
-    T: Sync;
+struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b = &'b str>(
+    PhantomData<(&'a T, &'b U)>,
+);
 
-impl<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b> From<A> for Q<'a, 'b, N, T, U>
-where
-    T: Sync,
-{
+impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> From<A> for Q<'a, 'b, N, T, U> {
     fn from(_value: A) -> Self {
         Self(PhantomData)
     }

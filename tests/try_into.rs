@@ -3,7 +3,7 @@ mod macros;
 use transitive::Transitive;
 
 mod try_into_simple {
-    use std::marker::PhantomData;
+    use std::{convert::Infallible, marker::PhantomData};
 
     use super::*;
 
@@ -77,20 +77,47 @@ mod try_into_simple {
 
     #[derive(Transitive)]
     #[transitive(try_into(A, B, C, D))] // impl TryFrom<Q<'a, 'b, N, T, U>> for D
-    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b = &'b str>(
+    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b = &'b str>(
         PhantomData<(&'a T, &'b U)>,
-    )
-    where
-        T: Sync;
+    );
 
-    impl<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b> TryFrom<Q<'a, 'b, N, T, U>> for A
-    where
-        T: Sync,
-    {
+    impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> TryFrom<Q<'a, 'b, N, T, U>> for A {
         type Error = ErrAB;
 
         fn try_from(_value: Q<'a, 'b, N, T, U>) -> Result<Self, Self::Error> {
             Ok(Self)
+        }
+    }
+
+    #[derive(Transitive)]
+    #[transitive(try_into(A, Q<'static, 'static, 2, () ,()>))] // impl TryFrom<G> for Q<'static, 'static, 2, (), ()>
+    struct G;
+
+    impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> TryFrom<A> for Q<'a, 'b, N, T, U> {
+        type Error = Infallible;
+
+        fn try_from(_: A) -> Result<Self, Self::Error> {
+            Ok(Q(PhantomData))
+        }
+    }
+
+    impl TryFrom<G> for A {
+        type Error = Infallible;
+
+        fn try_from(_: G) -> Result<Self, Self::Error> {
+            Ok(A)
+        }
+    }
+
+    #[derive(Transitive)]
+    #[transitive(try_into(A, Q<'a, 'static, 2, T ,()>))] // impl TryFrom<P<'a, T>> for Q<'a, 'static, 2, T, ()>>
+    struct P<'a, T: Send + Sync>(PhantomData<fn() -> &'a T>);
+
+    impl<'a, T: Send + Sync> TryFrom<P<'a, T>> for A {
+        type Error = Infallible;
+
+        fn try_from(_: P<'a, T>) -> Result<Self, Self::Error> {
+            Ok(A)
         }
     }
 
@@ -102,6 +129,8 @@ mod try_into_simple {
         let _ = D::try_from(Y(PhantomData));
         let _ = D::try_from(W::<2>);
         let _ = D::try_from(Q::<2, (), ()>(PhantomData));
+        let _ = Q::try_from(G);
+        let _ = Q::try_from(P::<'static, ()>(PhantomData));
     }
 }
 
@@ -146,15 +175,12 @@ mod try_into_custom_err {
 
     #[derive(Transitive)]
     #[transitive(try_into(A, B, C, D, error = ConvErr))] // impl TryFrom<Q<'a, 'b, N, T, U>> for D
-    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b, V = String>(
+    struct Q<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b, V = String>(
         PhantomData<(&'a T, &'b U, V)>,
-    )
-    where
-        T: Sync;
+    );
 
-    impl<'a, 'b: 'a, const N: usize, T: 'a + Send, U: 'b, V> TryFrom<Q<'a, 'b, N, T, U, V>> for A
-    where
-        T: Sync,
+    impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b, V> TryFrom<Q<'a, 'b, N, T, U, V>>
+        for A
     {
         type Error = ConvErr;
 
@@ -163,9 +189,43 @@ mod try_into_custom_err {
         }
     }
 
+    #[derive(Transitive)]
+    #[transitive(try_into(A, Q<'static, 'static, 2, () ,()>))] // impl TryFrom<G> for Q<'static, 'static, 2, (), ()>
+    struct G;
+
+    impl<'a, 'b: 'a, const N: usize, T: 'a + Send + Sync, U: 'b> TryFrom<A> for Q<'a, 'b, N, T, U> {
+        type Error = ConvErr;
+
+        fn try_from(_: A) -> Result<Self, Self::Error> {
+            Ok(Q(PhantomData))
+        }
+    }
+
+    impl TryFrom<G> for A {
+        type Error = ConvErr;
+
+        fn try_from(_: G) -> Result<Self, Self::Error> {
+            Ok(A)
+        }
+    }
+
+    #[derive(Transitive)]
+    #[transitive(try_into(A, Q<'a, 'static, 2, T ,()>))] // impl TryFrom<P<'a, T>> for Q<'a, 'static, 2, T, ()>>
+    struct P<'a, T: Send + Sync>(PhantomData<fn() -> &'a T>);
+
+    impl<'a, T: Send + Sync> TryFrom<P<'a, T>> for A {
+        type Error = ConvErr;
+
+        fn try_from(_: P<'a, T>) -> Result<Self, Self::Error> {
+            Ok(A)
+        }
+    }
+
     #[test]
     pub fn test_try_into_custom_err() {
         let _ = D::try_from(A);
         let _ = D::try_from(Q::<2, (), ()>(PhantomData));
+        let _ = Q::try_from(G);
+        let _ = Q::try_from(P::<'static, ()>(PhantomData));
     }
 }
