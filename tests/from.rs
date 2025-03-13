@@ -18,7 +18,7 @@ impl_from!(B to A);
 impl_from!(C to B);
 impl_from!(D to C);
 
-#[expect(clippy::duplicated_attributes)]
+#[allow(clippy::duplicated_attributes)]
 #[derive(Transitive)]
 #[transitive(from(D, C, B, A))] // impl From<D> for Z<T>
 #[transitive(from(C, B))] // impl From<D> for Z<T>
