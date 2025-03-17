@@ -77,3 +77,10 @@ pub fn test_from() {
     let _ = W::<2>::from(D);
     let _ = Q::<2, (), ()>::from(D);
 }
+
+/// Test that `#[transitive(from(T))]` should fail to compile
+#[test]
+fn test_from_single() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("tests/compile_fail/from_single.rs");
+}

@@ -132,6 +132,13 @@ mod try_into_simple {
         let _ = Q::try_from(G);
         let _ = Q::try_from(P::<'static, ()>(PhantomData));
     }
+
+    /// Test that `#[transitive(try_into(T))]` should fail to compile
+    #[test]
+    fn test_try_into_single() {
+        let t = trybuild::TestCases::new();
+        t.compile_fail("tests/compile_fail/try_into_single.rs");
+    }
 }
 
 mod try_into_custom_err {
@@ -227,5 +234,12 @@ mod try_into_custom_err {
         let _ = D::try_from(Q::<2, (), ()>(PhantomData));
         let _ = Q::try_from(G);
         let _ = Q::try_from(P::<'static, ()>(PhantomData));
+    }
+
+    /// Test that `#[transitive(try_into(T, error = Error))]` should fail to compile
+    #[test]
+    fn test_try_into_custom_err_single() {
+        let t = trybuild::TestCases::new();
+        t.compile_fail("tests/compile_fail/try_into_custom_err_single.rs");
     }
 }
