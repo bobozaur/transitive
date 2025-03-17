@@ -1,0 +1,15 @@
+error: At least two types are required for a transitive conversion
+  --> tests/compile_fail/from_single.rs:17:23
+   |
+17 |     #[transitive(from(A))] // impl From<A> for C
+   |                       ^
+
+error[E0277]: the trait bound `C: From<A>` is not satisfied
+  --> tests/compile_fail/from_single.rs:27:16
+   |
+27 |     let _: C = C::from(A);
+   |                ^ the trait `From<A>` is not implemented for `C`
+   |
+   = help: the trait `From<A>` is not implemented for `C`
+           but trait `From<B>` is implemented for it
+   = help: for that trait implementation, expected `B`, found `A`

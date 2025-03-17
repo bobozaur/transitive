@@ -1,6 +1,8 @@
 mod try_from;
 mod try_into;
 
+use std::collections::VecDeque;
+
 use syn::{
     parse::{discouraged::Speculative, Parse, ParseStream},
     punctuated::Punctuated,
@@ -11,7 +13,15 @@ pub use try_into::TryTransitionInto;
 
 /// A path list that may contain a custom error type.
 pub struct FalliblePathList {
-    type_list: Vec<Type>,
+    /// First type in the transitive conversion. ie. `A` in
+    /// `#[transitive(try_from(A, B, C, D, E))]`
+    first_type: Type,
+    /// Intermediate types for the transitive conversion. ie. `[B, .., D]` in
+    /// `#[transitive(try_from(A, B, C, D, E))]`
+    intermediate_types: VecDeque<Type>,
+    /// Last type in the transitive conversion. ie. `E` in
+    /// `#[transitive(try_from(A, B, C, D, E))]`
+    last_type: Type,
     error: Option<Type>,
 }
 
@@ -19,17 +29,17 @@ impl Parse for FalliblePathList {
     fn parse(input: ParseStream) -> SynResult<Self> {
         let attr_list = Punctuated::<Item, Token![,]>::parse_terminated(input)?;
 
-        let mut type_list = Vec::with_capacity(attr_list.len());
+        let mut type_list = VecDeque::with_capacity(attr_list.len());
         let mut error = None;
 
-        for attr in attr_list {
+        for attr in attr_list.iter().cloned() {
             match attr {
                 Item::Type(ty) if error.is_some() => {
                     let msg = "types not allowed after 'error'";
                     return Err(SynError::new_spanned(ty, msg));
                 }
                 // Just a regular type path in the conversion path
-                Item::Type(ty) => type_list.push(ty),
+                Item::Type(ty) => type_list.push_back(ty),
                 Item::Error(err) if error.is_some() => {
                     let msg = "'error' not allowed multiple times";
                     return Err(SynError::new_spanned(err, msg));
@@ -39,13 +49,40 @@ impl Parse for FalliblePathList {
             }
         }
 
-        let output = Self { type_list, error };
+        static TOO_FEW_TYPES_ERR_MSG: &str =
+            "At least two types are required for a transitive conversion";
+        let Some(first_type) = type_list.pop_front() else {
+            let mut span = attr_list;
+            // Remove error attr from span
+            if error.is_some() {
+                span.pop_punct();
+                span.pop();
+            }
+            return Err(SynError::new_spanned(span, TOO_FEW_TYPES_ERR_MSG));
+        };
+        let Some(last_type) = type_list.pop_back() else {
+            let mut span = attr_list;
+            // Remove error attr from span
+            if error.is_some() {
+                span.pop_punct();
+                span.pop();
+            }
+            return Err(SynError::new_spanned(span, TOO_FEW_TYPES_ERR_MSG));
+        };
+
+        let output = Self {
+            first_type,
+            intermediate_types: type_list,
+            last_type,
+            error,
+        };
 
         Ok(output)
     }
 }
 
 /// An item in the parameters list of an attribute.
+#[derive(Clone)]
 pub enum Item {
     Type(Type),
     Error(Type),
@@ -67,6 +104,14 @@ impl Parse for Item {
             }
             // Try to parse anything else as a type in the path list
             _ => input.parse().map(Self::Type),
+        }
+    }
+}
+
+impl quote::ToTokens for Item {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        match self {
+            Self::Type(ty) | Self::Error(ty) => ty.to_tokens(tokens),
         }
     }
 }
