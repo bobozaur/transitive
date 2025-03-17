@@ -4,18 +4,18 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    Result as SynResult, Token, Type,
+    Result as SynResult,
 };
 
+use super::PathList;
 use crate::transitive::TokenizablePath;
 
 /// Path corresponding to a [`#[transitive(from(..))`] path.
-pub struct TransitionFrom(Punctuated<Type, Token![,]>);
+pub struct TransitionFrom(PathList);
 
 impl Parse for TransitionFrom {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        Punctuated::parse_terminated(input).map(Self)
+        PathList::parse(input).map(Self)
     }
 }
 
@@ -23,12 +23,15 @@ impl ToTokens for TokenizablePath<'_, &TransitionFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let first = self.path.0.first();
+        let first = &self.path.0.first_type;
+        let last = &self.path.0.last_type;
 
         let stmts = self
             .path
             .0
+            .intermediate_types
             .iter()
+            .chain(once(last))
             .map(|ty| quote! {let val: #ty = core::convert::From::from(val);})
             .chain(once(quote! {core::convert::From::from(val)}));
 
