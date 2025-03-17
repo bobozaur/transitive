@@ -1,5 +1,3 @@
-use std::iter::once;
-
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{
@@ -23,17 +21,17 @@ impl ToTokens for TokenizablePath<'_, &TryTransitionFrom> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let first = self.path.0.type_list.first();
-        let last = self.path.0.type_list.last();
+        let first = &self.path.0.first_type;
+        let last = &self.path.0.last_type;
 
         let stmts = self
             .path
             .0
-            .type_list
+            .intermediate_types
             .iter()
-            .skip(1)
+            .chain(std::iter::once(last))
             .map(|ty| quote! {let val: #ty = core::convert::TryFrom::try_from(val)?;})
-            .chain(once(
+            .chain(std::iter::once(
                 quote! {let val = core::convert::TryFrom::try_from(val)?;},
             ));
 
