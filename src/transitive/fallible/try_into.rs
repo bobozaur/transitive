@@ -21,15 +21,12 @@ impl ToTokens for TokenizablePath<'_, &TryTransitionInto> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = self.ident;
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
-        let last = self.path.0.type_list.last();
-        let second_last = self.path.0.type_list.get(self.path.0.type_list.len() - 2);
+        let first = &self.path.0.first_type;
+        let last = &self.path.0.last_type;
+        let second_last = self.path.0.intermediate_types.last().unwrap_or(first);
 
-        let stmts = self
-            .path
-            .0
-            .type_list
-            .iter()
-            .take(self.path.0.type_list.len() - 1)
+        let stmts = std::iter::once(first)
+            .chain(&self.path.0.intermediate_types)
             .map(|ty| quote! {let val: #ty = core::convert::TryFrom::try_from(val)?;});
 
         let error = self
