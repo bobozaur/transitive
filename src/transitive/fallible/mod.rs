@@ -4,11 +4,12 @@ mod try_into;
 use syn::{
     parse::{discouraged::Speculative, Parse, ParseStream},
     punctuated::Punctuated,
-    spanned::Spanned,
     Error as SynError, Ident, Result as SynResult, Token, Type,
 };
 pub use try_from::TryTransitionFrom;
 pub use try_into::TryTransitionInto;
+
+use crate::transitive::TOO_FEW_TYPES_ERR_MSG;
 
 /// A path list that may contain a custom error type.
 pub struct FalliblePathList {
@@ -26,18 +27,16 @@ pub struct FalliblePathList {
 
 impl Parse for FalliblePathList {
     fn parse(input: ParseStream) -> SynResult<Self> {
+        let error_span = input.span();
         let attr_list = Punctuated::<Item, Token![,]>::parse_terminated(input)?;
 
-        let mut attr_list_iter = attr_list.iter().cloned();
+        let mut attr_list_iter = attr_list.into_iter();
         let (first_type, mut last_type) = match (attr_list_iter.next(), attr_list_iter.next()) {
-            (Some(Item::Type(first)), Some(Item::Type(last))) => (first, last),
-            _ => {
-                static TOO_FEW_TYPES_ERR_MSG: &str = "at least two types required";
-                return Err(SynError::new(attr_list.span(), TOO_FEW_TYPES_ERR_MSG));
-            }
+            (Some(Item::Type(ft)), Some(Item::Type(lt))) => (ft, lt),
+            _ => return Err(SynError::new(error_span, TOO_FEW_TYPES_ERR_MSG)),
         };
 
-        let mut intermediate_types = Vec::with_capacity(attr_list.len());
+        let mut intermediate_types = Vec::with_capacity(attr_list_iter.len());
         let mut error = None;
 
         for attr in attr_list_iter {
@@ -72,7 +71,6 @@ impl Parse for FalliblePathList {
 }
 
 /// An item in the parameters list of an attribute.
-#[derive(Clone)]
 pub enum Item {
     Type(Type),
     Error(Type),
@@ -94,14 +92,6 @@ impl Parse for Item {
             }
             // Try to parse anything else as a type in the path list
             _ => input.parse().map(Self::Type),
-        }
-    }
-}
-
-impl quote::ToTokens for Item {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        match self {
-            Self::Type(ty) | Self::Error(ty) => ty.to_tokens(tokens),
         }
     }
 }

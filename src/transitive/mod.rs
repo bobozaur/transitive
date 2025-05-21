@@ -11,6 +11,8 @@ use syn::{
     DeriveInput, Error as SynError, Generics, Ident, MetaList, Result as SynResult, Token,
 };
 
+static TOO_FEW_TYPES_ERR_MSG: &str = "at least two types required";
+
 /// The input to the [`crate::Transitive`] derive macro.
 pub struct TransitiveInput {
     ident: Ident,

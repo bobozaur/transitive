@@ -1,6 +1,8 @@
 mod from;
 mod into;
 
+use std::mem;
+
 pub use from::TransitionFrom;
 pub use into::TransitionInto;
 use syn::{
@@ -8,6 +10,8 @@ use syn::{
     punctuated::Punctuated,
     Error as SynError, Result as SynResult, Token, Type,
 };
+
+use crate::transitive::TOO_FEW_TYPES_ERR_MSG;
 
 pub struct PathList {
     /// First type in the transitive conversion. ie. `A` in
@@ -25,19 +29,14 @@ impl Parse for PathList {
     fn parse(input: ParseStream) -> SynResult<Self> {
         let attr_list = Punctuated::<Type, Token![,]>::parse_terminated(input)?;
 
-        let mut attr_list_iter = attr_list.iter().cloned();
+        let mut attr_list_iter = attr_list.into_iter();
         let (first_type, mut last_type) = match (attr_list_iter.next(), attr_list_iter.next()) {
             (Some(first_type), Some(last_type)) => (first_type, last_type),
-            _ => {
-                static TOO_FEW_TYPES_ERR_MSG: &str = "at least two types required";
-                return Err(SynError::new_spanned(attr_list, TOO_FEW_TYPES_ERR_MSG));
-            }
+            _ => return Err(SynError::new(input.span(), TOO_FEW_TYPES_ERR_MSG)),
         };
-        let mut intermediate_types = Vec::with_capacity(attr_list.len());
-        for ty in attr_list_iter {
-            intermediate_types.push(last_type);
-            last_type = ty;
-        }
+        let intermediate_types = attr_list_iter
+            .map(|ty| mem::replace(&mut last_type, ty))
+            .collect();
 
         let output = Self {
             first_type,
