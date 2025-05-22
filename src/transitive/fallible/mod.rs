@@ -3,16 +3,15 @@ mod try_into;
 
 use syn::{
     parse::{discouraged::Speculative, Parse, ParseStream},
-    punctuated::Punctuated,
     Error as SynError, Ident, Result as SynResult, Token, Type,
 };
 pub use try_from::TryTransitionFrom;
 pub use try_into::TryTransitionInto;
 
-use crate::transitive::TOO_FEW_TYPES_ERR_MSG;
+use crate::transitive::AtLeastTwoTypes;
 
 /// A path list that may contain a custom error type.
-pub struct FalliblePathList {
+struct FallibleTypeList {
     /// First type in the transitive conversion. ie. `A` in
     /// `#[transitive(try_from(A, B, C, D, E))]`
     first_type: Type,
@@ -25,21 +24,18 @@ pub struct FalliblePathList {
     error: Option<Type>,
 }
 
-impl Parse for FalliblePathList {
+impl Parse for FallibleTypeList {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        let error_span = input.span();
-        let attr_list = Punctuated::<Item, Token![,]>::parse_terminated(input)?;
+        let AtLeastTwoTypes {
+            first_type,
+            second_type: mut last_type,
+            remaining,
+        } = AtLeastTwoTypes::parse(input)?;
 
-        let mut attr_list_iter = attr_list.into_iter();
-        let (first_type, mut last_type) = match (attr_list_iter.next(), attr_list_iter.next()) {
-            (Some(Item::Type(ft)), Some(Item::Type(lt))) => (ft, lt),
-            _ => return Err(SynError::new(error_span, TOO_FEW_TYPES_ERR_MSG)),
-        };
-
-        let mut intermediate_types = Vec::with_capacity(attr_list_iter.len());
+        let mut intermediate_types = Vec::with_capacity(remaining.len());
         let mut error = None;
 
-        for attr in attr_list_iter {
+        for attr in remaining {
             match attr {
                 Item::Type(ty) if error.is_some() => {
                     let msg = "types not allowed after 'error'";
@@ -71,7 +67,7 @@ impl Parse for FalliblePathList {
 }
 
 /// An item in the parameters list of an attribute.
-pub enum Item {
+enum Item {
     Type(Type),
     Error(Type),
 }
@@ -92,6 +88,15 @@ impl Parse for Item {
             }
             // Try to parse anything else as a type in the path list
             _ => input.parse().map(Self::Type),
+        }
+    }
+}
+
+impl From<Item> for Option<Type> {
+    fn from(value: Item) -> Self {
+        match value {
+            Item::Type(ty) => Some(ty),
+            Item::Error(_) => None,
         }
     }
 }

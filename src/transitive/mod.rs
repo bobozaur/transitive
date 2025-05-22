@@ -8,10 +8,8 @@ use quote::ToTokens;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    DeriveInput, Error as SynError, Generics, Ident, MetaList, Result as SynResult, Token,
+    DeriveInput, Error as SynError, Generics, Ident, MetaList, Result as SynResult, Token, Type,
 };
-
-static TOO_FEW_TYPES_ERR_MSG: &str = "at least two types required";
 
 /// The input to the [`crate::Transitive`] derive macro.
 pub struct TransitiveInput {
@@ -63,7 +61,7 @@ impl ToTokens for TransitiveInput {
 }
 
 /// Enum representing a path to take when transitioning from one type to another.
-pub enum TransitionPath {
+enum TransitionPath {
     From(TransitionFrom),
     Into(TransitionInto),
     TryFrom(TryTransitionFrom),
@@ -112,18 +110,56 @@ impl ToTokens for TokenizablePath<'_, &TransitionPath> {
 }
 
 /// Wrapper type that aids in the tokenization of [`TransitionPath`] and its variants.
-pub struct TokenizablePath<'a, T> {
-    pub ident: &'a Ident,
-    pub generics: &'a Generics,
-    pub path: T,
+struct TokenizablePath<'a, T> {
+    ident: &'a Ident,
+    generics: &'a Generics,
+    path: T,
 }
 
 impl<'a, T> TokenizablePath<'a, T> {
-    pub fn new(ident: &'a Ident, generics: &'a Generics, path: T) -> Self {
+    fn new(ident: &'a Ident, generics: &'a Generics, path: T) -> Self {
         Self {
             ident,
             generics,
             path,
         }
+    }
+}
+
+/// Parsing helper that guarantees that there are at least two [`Type`] items in the list.
+struct AtLeastTwoTypes<T> {
+    /// First type in the list.
+    first_type: Type,
+    /// Second type in the list.
+    second_type: Type,
+    /// Remaining items in the input.
+    /// These are NOT guaranteed to be types!
+    remaining: syn::punctuated::IntoIter<T>,
+}
+
+impl<T> Parse for AtLeastTwoTypes<T>
+where
+    T: Parse,
+    Option<Type>: From<T>,
+{
+    fn parse(input: ParseStream) -> SynResult<Self> {
+        let error_span = input.span();
+
+        let mut remaining = Punctuated::<T, Token![,]>::parse_terminated(input)?.into_iter();
+        let first_opt = remaining.next().and_then(From::from);
+        let second_opt = remaining.next().and_then(From::from);
+
+        let (first_type, second_type) = match (first_opt, second_opt) {
+            (Some(first_type), Some(last_type)) => (first_type, last_type),
+            _ => return Err(SynError::new(error_span, "at least two types required")),
+        };
+
+        let output = Self {
+            first_type,
+            second_type,
+            remaining,
+        };
+
+        Ok(output)
     }
 }

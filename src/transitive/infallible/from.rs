@@ -5,15 +5,15 @@ use syn::{
     Result as SynResult,
 };
 
-use super::PathList;
+use super::TypeList;
 use crate::transitive::TokenizablePath;
 
 /// Path corresponding to a [`#[transitive(from(..))`] path.
-pub struct TransitionFrom(PathList);
+pub struct TransitionFrom(TypeList);
 
 impl Parse for TransitionFrom {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        PathList::parse(input).map(Self)
+        TypeList::parse(input).map(Self)
     }
 }
 

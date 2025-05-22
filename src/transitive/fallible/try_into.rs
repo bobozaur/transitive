@@ -5,15 +5,15 @@ use syn::{
     Result as SynResult,
 };
 
-use super::FalliblePathList;
+use super::FallibleTypeList;
 use crate::transitive::TokenizablePath;
 
 /// Path corresponding to a [`#[transitive(try_into(..))`] path.
-pub struct TryTransitionInto(FalliblePathList);
+pub struct TryTransitionInto(FallibleTypeList);
 
 impl Parse for TryTransitionInto {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        FalliblePathList::parse(input).map(Self)
+        FallibleTypeList::parse(input).map(Self)
     }
 }
 
