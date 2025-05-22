@@ -27,12 +27,13 @@ pub struct PathList {
 
 impl Parse for PathList {
     fn parse(input: ParseStream) -> SynResult<Self> {
+        let error_span = input.span();
         let attr_list = Punctuated::<Type, Token![,]>::parse_terminated(input)?;
 
         let mut attr_list_iter = attr_list.into_iter();
         let (first_type, mut last_type) = match (attr_list_iter.next(), attr_list_iter.next()) {
             (Some(first_type), Some(last_type)) => (first_type, last_type),
-            _ => return Err(SynError::new(input.span(), TOO_FEW_TYPES_ERR_MSG)),
+            _ => return Err(SynError::new(error_span, TOO_FEW_TYPES_ERR_MSG)),
         };
         let intermediate_types = attr_list_iter
             .map(|ty| mem::replace(&mut last_type, ty))
