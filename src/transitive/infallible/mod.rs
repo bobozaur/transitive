@@ -1,8 +1,6 @@
 mod from;
 mod into;
 
-use std::mem;
-
 pub use from::TransitionFrom;
 pub use into::TransitionInto;
 use syn::{
@@ -36,7 +34,7 @@ impl Parse for PathList {
             _ => return Err(SynError::new(error_span, TOO_FEW_TYPES_ERR_MSG)),
         };
         let intermediate_types = attr_list_iter
-            .map(|ty| mem::replace(&mut last_type, ty))
+            .map(|ty| std::mem::replace(&mut last_type, ty))
             .collect();
 
         let output = Self {
