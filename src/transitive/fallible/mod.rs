@@ -9,27 +9,47 @@ use syn::{
 pub use try_from::TryTransitionFrom;
 pub use try_into::TryTransitionInto;
 
+use crate::transitive::TOO_FEW_TYPES_ERR_MSG;
+
 /// A path list that may contain a custom error type.
 pub struct FalliblePathList {
-    type_list: Vec<Type>,
+    /// First type in the transitive conversion. ie. `A` in
+    /// `#[transitive(try_from(A, B, C, D, E))]`
+    first_type: Type,
+    /// Intermediate types for the transitive conversion. ie. `[B, .., D]` in
+    /// `#[transitive(try_from(A, B, C, D, E))]`
+    intermediate_types: Vec<Type>,
+    /// Last type in the transitive conversion. ie. `E` in
+    /// `#[transitive(try_from(A, B, C, D, E))]`
+    last_type: Type,
     error: Option<Type>,
 }
 
 impl Parse for FalliblePathList {
     fn parse(input: ParseStream) -> SynResult<Self> {
+        let error_span = input.span();
         let attr_list = Punctuated::<Item, Token![,]>::parse_terminated(input)?;
 
-        let mut type_list = Vec::with_capacity(attr_list.len());
+        let mut attr_list_iter = attr_list.into_iter();
+        let (first_type, mut last_type) = match (attr_list_iter.next(), attr_list_iter.next()) {
+            (Some(Item::Type(ft)), Some(Item::Type(lt))) => (ft, lt),
+            _ => return Err(SynError::new(error_span, TOO_FEW_TYPES_ERR_MSG)),
+        };
+
+        let mut intermediate_types = Vec::with_capacity(attr_list_iter.len());
         let mut error = None;
 
-        for attr in attr_list {
+        for attr in attr_list_iter {
             match attr {
                 Item::Type(ty) if error.is_some() => {
                     let msg = "types not allowed after 'error'";
                     return Err(SynError::new_spanned(ty, msg));
                 }
                 // Just a regular type path in the conversion path
-                Item::Type(ty) => type_list.push(ty),
+                Item::Type(ty) => {
+                    intermediate_types.push(last_type);
+                    last_type = ty;
+                }
                 Item::Error(err) if error.is_some() => {
                     let msg = "'error' not allowed multiple times";
                     return Err(SynError::new_spanned(err, msg));
@@ -39,7 +59,12 @@ impl Parse for FalliblePathList {
             }
         }
 
-        let output = Self { type_list, error };
+        let output = Self {
+            first_type,
+            intermediate_types,
+            last_type,
+            error,
+        };
 
         Ok(output)
     }
