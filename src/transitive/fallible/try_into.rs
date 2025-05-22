@@ -6,7 +6,7 @@ use syn::{
 };
 
 use super::FallibleTypeList;
-use crate::transitive::TokenizablePath;
+use crate::transitive::{distinct_types_check, TokenizablePath};
 
 /// Path corresponding to a [`#[transitive(try_into(..))`] path.
 pub struct TryTransitionInto(FallibleTypeList);
@@ -37,11 +37,21 @@ impl ToTokens for TokenizablePath<'_, &TryTransitionInto> {
             .map(|e| quote!(#e))
             .unwrap_or_else(|| quote!(<#last as TryFrom<#second_last>>::Error));
 
+        let types_check = distinct_types_check(
+            first,
+            last,
+            name,
+            &impl_generics,
+            &ty_generics,
+            where_clause,
+        );
+
         let expanded = quote! {
             impl #impl_generics core::convert::TryFrom<#name #ty_generics> for #last #where_clause {
                 type Error = #error;
 
                 fn try_from(val: #name #ty_generics) -> core::result::Result<Self, Self::Error> {
+                    #types_check
                     #(#stmts)*
                     let val = core::convert::TryFrom::try_from(val)?;
                     Ok(val)

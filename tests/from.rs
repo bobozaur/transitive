@@ -9,7 +9,7 @@ use transitive::Transitive;
 struct A;
 
 #[derive(Transitive)]
-#[transitive(from(D, C))] // impl From<D> for A
+#[transitive(from(D, C))] // impl From<D> for B
 struct B;
 struct C;
 struct D;
@@ -21,7 +21,7 @@ impl_from!(D to C);
 #[allow(clippy::duplicated_attributes)]
 #[derive(Transitive)]
 #[transitive(from(D, C, B, A))] // impl From<D> for Z<T>
-#[transitive(from(C, B))] // impl From<D> for Z<T>
+#[transitive(from(C, B))] // impl From<C> for Z<T>
 struct Z<T>(PhantomData<T>);
 
 impl<T> From<A> for Z<T> {

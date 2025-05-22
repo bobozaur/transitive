@@ -4,11 +4,12 @@ mod infallible;
 use fallible::{TryTransitionFrom, TryTransitionInto};
 use infallible::{TransitionFrom, TransitionInto};
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    DeriveInput, Error as SynError, Generics, Ident, MetaList, Result as SynResult, Token, Type,
+    DeriveInput, Error as SynError, Generics, Ident, ImplGenerics, MetaList, Result as SynResult,
+    Token, Type, TypeGenerics, WhereClause,
 };
 
 /// The input to the [`crate::Transitive`] derive macro.
@@ -127,6 +128,21 @@ impl<'a, T> TokenizablePath<'a, T> {
 }
 
 /// Parsing helper that guarantees that there are at least two [`Type`] items in the list.
+///
+/// ```compile_fail
+/// use transitive::Transitive;
+///
+/// struct A;
+/// #[derive(Transitive)]
+/// #[transitive(from(A))] // fails to compile, list too short
+/// struct B;
+///
+/// impl From<A> for B {
+///     fn from(_: A) -> B {
+///         Self
+///     }
+/// }
+/// ```
 struct AtLeastTwoTypes<T> {
     /// First type in the list.
     first_type: Type,
@@ -161,5 +177,92 @@ where
         };
 
         Ok(output)
+    }
+}
+
+/// Inserts a compile time check that the first and last types are not the same.
+///
+/// ```compile_fail
+/// use transitive::Transitive;
+///
+/// struct A;
+/// #[derive(Transitive)]
+/// #[transitive(try_into(A, A))] // fails to compile, first and last types are equal
+/// struct B;
+///
+/// impl TryFrom<B> for A {
+///     type Error = ();
+///
+///     fn try_from(_: B) -> Result<Self, Self::Error> {
+///         Ok(Self)
+///     }
+/// }
+/// ```
+fn distinct_types_check<'a>(
+    left: &Type,
+    right: &Type,
+    derived: &Ident,
+    impl_generics: &ImplGenerics<'a>,
+    ty_generics: &TypeGenerics<'a>,
+    where_clause: Option<&WhereClause>,
+) -> TokenStream {
+    let turbofish = ty_generics.as_turbofish();
+
+    // We first declare an inherent constant on the wrapper type when we specifically use the
+    // `left` type.
+    //
+    // We use `(left, derived)` as the generic type for [`Checker`] because `left` might use
+    // generics of `derived`, but we do not have generic components ([`ImplGenerics`],
+    // [`TypeGenerics`], etc.) for other types other than `derived`, which is the derived type.
+    let checker = quote! {
+        struct Checker<T>(core::marker::PhantomData<fn() -> T>);
+
+        impl #impl_generics Checker<(#left, #derived #ty_generics)> #where_clause {
+            const FLAG: bool = false;
+        }
+    };
+
+    // We now declare a trait with a constant that has the same name as the inherent one and a
+    // blanket impl.
+    //
+    // The `left` type will also get the trait constant, but the inherent constant has priority.
+    // Because of that, if the left and right types are the same then the inherent constant gets
+    // used in the assertion twice.
+    let flagged = quote! {
+        #checker
+
+        trait Flagged {
+            const FLAG: bool;
+        }
+
+        impl<T> Flagged for Checker<T> {
+            const FLAG: bool = true;
+        }
+    };
+
+    // The actual assert resides in a trait constant to allow the usage of generics in the
+    // const context. A regular const declaration would not allow the usage of generics from the
+    // outer scope.
+    //
+    // The assert merely does an XOR on the checker flags. If the types are different, then
+    // one flag will be the inherent constant while the other will come from the trait blanket
+    // impl.
+    //
+    // We also make sure to invoke the constant to ensure it gets compiled.
+    quote! {
+        #flagged
+
+        trait Verifier {
+            const VALID: ();
+        }
+
+        impl #impl_generics Verifier for #derived #ty_generics {
+            const VALID: () = assert!(
+                Checker::<(#left, #derived #ty_generics)>::FLAG ^ Checker::<(#right, #derived #ty_generics)>::FLAG,
+                "first and last types are equal"
+            );
+        }
+
+        let _ = #derived #turbofish::VALID;
     }
 }
