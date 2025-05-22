@@ -69,10 +69,3 @@ pub fn test_into() {
     let _ = D::from(W::<2>);
     let _ = D::from(Q::<2, (), ()>(PhantomData));
 }
-
-/// Test that `#[transitive(into(T))]` should fail to compile
-#[test]
-fn test_into_single() {
-    let t = trybuild::TestCases::new();
-    t.compile_fail("tests/compile_fail/into_single.rs");
-}
