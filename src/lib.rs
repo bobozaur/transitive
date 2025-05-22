@@ -43,7 +43,7 @@
 //! use transitive::Transitive;
 //!
 //! struct A;
-//! #[derive(Transitive)] 
+//! #[derive(Transitive)]
 //! #[transitive(from(A))] // fails to compile
 //! struct B;
 //! ```
