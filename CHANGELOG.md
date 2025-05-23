@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 2025-05-23
+
+### Added
+
+- [#15](https://github.com/bobozaur/transitive/pull/15): Check that at least two distinct types are in the type list.
+
+### Fixed
+
+- [#14](https://github.com/bobozaur/transitive/pull/14): Disallow type lists with only one type.
+
 ## [1.1.0] - 2025-03-13
 
 ### Changed
