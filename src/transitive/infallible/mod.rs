@@ -5,13 +5,12 @@ pub use from::TransitionFrom;
 pub use into::TransitionInto;
 use syn::{
     parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    Error as SynError, Result as SynResult, Token, Type,
+    Result as SynResult, Type,
 };
 
-use crate::transitive::TOO_FEW_TYPES_ERR_MSG;
+use crate::transitive::AtLeastTwoTypes;
 
-pub struct PathList {
+struct TypeList {
     /// First type in the transitive conversion. ie. `A` in
     /// `#[transitive(from(A, B, C, D, E))]`
     first_type: Type,
@@ -23,17 +22,15 @@ pub struct PathList {
     last_type: Type,
 }
 
-impl Parse for PathList {
+impl Parse for TypeList {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        let error_span = input.span();
-        let attr_list = Punctuated::<Type, Token![,]>::parse_terminated(input)?;
+        let AtLeastTwoTypes {
+            first_type,
+            second_type: mut last_type,
+            remaining,
+        } = AtLeastTwoTypes::parse(input)?;
 
-        let mut attr_list_iter = attr_list.into_iter();
-        let (first_type, mut last_type) = match (attr_list_iter.next(), attr_list_iter.next()) {
-            (Some(first_type), Some(last_type)) => (first_type, last_type),
-            _ => return Err(SynError::new(error_span, TOO_FEW_TYPES_ERR_MSG)),
-        };
-        let intermediate_types = attr_list_iter
+        let intermediate_types = remaining
             .map(|ty| std::mem::replace(&mut last_type, ty))
             .collect();
 

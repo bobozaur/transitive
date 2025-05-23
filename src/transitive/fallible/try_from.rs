@@ -5,15 +5,15 @@ use syn::{
     Result as SynResult,
 };
 
-use super::FalliblePathList;
-use crate::transitive::TokenizablePath;
+use super::FallibleTypeList;
+use crate::transitive::{distinct_types_check, TokenizablePath};
 
 /// Path corresponding to a [`#[transitive(try_from(..))`] path.
-pub struct TryTransitionFrom(FalliblePathList);
+pub struct TryTransitionFrom(FallibleTypeList);
 
 impl Parse for TryTransitionFrom {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        FalliblePathList::parse(input).map(Self)
+        FallibleTypeList::parse(input).map(Self)
     }
 }
 
@@ -43,11 +43,21 @@ impl ToTokens for TokenizablePath<'_, &TryTransitionFrom> {
             .map(|e| quote!(#e))
             .unwrap_or_else(|| quote!(<Self as TryFrom<#last>>::Error));
 
+        let types_check = distinct_types_check(
+            first,
+            last,
+            name,
+            &impl_generics,
+            &ty_generics,
+            where_clause,
+        );
+
         let expanded = quote! {
             impl #impl_generics core::convert::TryFrom<#first> for #name #ty_generics #where_clause {
                 type Error = #error;
 
                 fn try_from(val: #first) -> core::result::Result<Self, Self::Error> {
+                    #types_check
                     #(#stmts)*
                     Ok(val)
                 }

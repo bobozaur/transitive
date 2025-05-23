@@ -34,20 +34,6 @@
 //! overrides the default behavior and allows specifying a custom error type, but all the error
 //! types resulting from conversions must be convertible to this type.
 //!
-//! # Conversion type list
-//!
-//! Regardless of the conversion performed, the list of types provided to the attribute must contain
-//! at least two types. A compilation error takes place otherwise:
-//!
-//! ```compile_fail
-//! use transitive::Transitive;
-//!
-//! struct A;
-//! #[derive(Transitive)]
-//! #[transitive(from(A))] // fails to compile
-//! struct B;
-//! ```
-//!
 //! # Examples:
 //!
 //! ```

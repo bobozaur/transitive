@@ -5,15 +5,15 @@ use syn::{
     Result as SynResult,
 };
 
-use super::PathList;
-use crate::transitive::TokenizablePath;
+use super::TypeList;
+use crate::transitive::{distinct_types_check, TokenizablePath};
 
 /// Path corresponding to a [`#[transitive(from(..))`] path.
-pub struct TransitionFrom(PathList);
+pub struct TransitionFrom(TypeList);
 
 impl Parse for TransitionFrom {
     fn parse(input: ParseStream) -> SynResult<Self> {
-        PathList::parse(input).map(Self)
+        TypeList::parse(input).map(Self)
     }
 }
 
@@ -33,9 +33,19 @@ impl ToTokens for TokenizablePath<'_, &TransitionFrom> {
             .map(|ty| quote! {let val: #ty = core::convert::From::from(val);})
             .chain(std::iter::once(quote! {core::convert::From::from(val)}));
 
+        let types_check = distinct_types_check(
+            first,
+            last,
+            name,
+            &impl_generics,
+            &ty_generics,
+            where_clause,
+        );
+
         let expanded = quote! {
             impl #impl_generics core::convert::From<#first> for #name #ty_generics #where_clause {
                 fn from(val: #first) -> Self {
+                    #types_check
                     #(#stmts)*
                 }
             }
