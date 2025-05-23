@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: Run tests
         run: cargo test
@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: Cargo publish
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}

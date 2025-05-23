@@ -13,6 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
 
       - name: Check format
         run: cargo +nightly fmt --check
@@ -23,8 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.77.0
       - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@1.77.0
+        with:
+          components: clippy
 
       - name: Run clippy
         run: cargo clippy --tests
@@ -38,8 +42,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.77.0
       - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@1.77.0
 
       - name: Run tests
         run: cargo test
