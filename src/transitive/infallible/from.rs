@@ -32,7 +32,7 @@ impl ToTokens for TokenizablePath<'_, &TransitionFrom> {
             .chain(std::iter::once(last))
             .map(|ty| quote! {let val: #ty = core::convert::From::from(val);})
             .chain(std::iter::once(quote! {core::convert::From::from(val)}));
-        
+
         let types_check = distinct_types_check(
             first,
             last,
