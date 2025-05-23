@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: ["main"]
 
-env:
-  RUST_TOOLCHAIN: 1.77.0
-
 jobs:
   format:
     name: Format
@@ -26,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@${{ env.RUST_TOOLCHAIN }}
+      - uses: dtolnay/rust-toolchain@1.77.0
       - uses: Swatinem/rust-cache@v2
 
       - name: Run clippy
@@ -41,7 +38,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@${{ env.RUST_TOOLCHAIN }}
+      - uses: dtolnay/rust-toolchain@1.77.0
       - uses: Swatinem/rust-cache@v2
 
       - name: Run tests
