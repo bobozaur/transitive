@@ -8,12 +8,12 @@ on:
     branches: ["main"]
 
 env:
-  RUST_TOOLCHAIN: 1.74.0
+  RUST_TOOLCHAIN: 1.77.0
 
 jobs:
   format:
     name: Format
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -33,7 +33,7 @@ jobs:
   clippy:
     name: Clippy
     needs: format
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -54,11 +54,10 @@ jobs:
         env:
           RUSTFLAGS: -D warnings
 
-  
   tests:
     name: Tests
     needs: clippy
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
