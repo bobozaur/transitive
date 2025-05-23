@@ -35,6 +35,7 @@
 //! types resulting from conversions must be convertible to this type.
 //!
 //! # Examples:
+//!
 //! ```
 //! use transitive::Transitive;
 //!
@@ -71,6 +72,7 @@
 //! ```
 //!
 //! Note that the macro does nothing for types in the middle:
+//!
 //! ```compile_fail
 //! use transitive::Transitive;
 //!
@@ -102,6 +104,7 @@
 //! D::from(A); // works
 //! C::from(A); // does not compile
 //! ```
+//!
 //! ```
 //! use transitive::Transitive;
 //!
@@ -136,6 +139,7 @@
 //!
 //! Let's see an example on how to use [`Transitive`] when combining the "reversed"
 //! nature of the `from` and `try_from` attribute modifiers and the error transitions constraints:
+//!
 //! ```
 //! #![allow(non_camel_case_types)]
 //! use transitive::Transitive;
